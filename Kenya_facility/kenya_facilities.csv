@@ -1,0 +1,439 @@
+id,name,type,lat,lng,county,address,phone,hours,rating,wheelchair
+1,Kenyatta National Hospital,Hospital,-1.3006,36.8025,Nairobi,"Hospital Rd, Nairobi","(020) 272-6300","24/7",4.5,TRUE
+2,University of Nairobi,School,-1.2798,36.8162,Nairobi,"University Way, Nairobi","(020) 318-262","8AM-5PM",4.4,TRUE
+3,Uhuru Park,Park,-1.2921,36.8150,Nairobi,"Uhuru Highway, Nairobi","N/A","6AM-7PM",4.8,TRUE
+4,Central Police Station,Police Station,-1.2850,36.8220,Nairobi,"Moi Ave, Nairobi","(020) 341-411","24/7",3.9,TRUE
+5,McMillan Memorial Library,Library,-1.2839,36.8242,Nairobi,"Banda St, Nairobi","(020) 222-9311","9AM-6PM",4.3,TRUE
+6,Fire Station Nairobi,Fire Station,-1.2920,36.8250,Nairobi,"Haile Selassie Ave, Nairobi","(020) 222-2181","24/7",4.2,TRUE
+7,All Saints Cathedral,Church,-1.2833,36.8233,Nairobi,"Kenyatta Ave, Nairobi","(020) 222-3311","6AM-8PM",4.7,TRUE
+8,Nairobi Chapel,Church,-1.2921,36.8219,Nairobi,"Kaunda St, Nairobi","(020) 222-8765","7AM-9PM",4.5,TRUE
+9,Holy Family Basilica,Church,-1.2756,36.8264,Nairobi,"Kenyatta Ave, Nairobi","(020) 222-5402","6AM-8PM",4.8,TRUE
+10,Sarova Stanley Hotel,Hotel,-1.2833,36.8192,Nairobi,"Kimathi St, Nairobi","(020) 272-6040","24/7",4.6,TRUE
+11,Villa Rosa Kempinski,Hotel,-1.2656,36.8153,Nairobi,"Chiromo Rd, Nairobi","(020) 276-1000","24/7",4.7,TRUE
+12,Nairobi Serena Hotel,Hotel,-1.2858,36.8194,Nairobi,"Kenyatta Ave, Nairobi","(020) 272-6000","24/7",4.5,TRUE
+13,Carnivore Restaurant,Restaurant,-1.2997,36.8225,Nairobi,"Langata Rd, Nairobi","(020) 272-6163","11AM-11PM",4.4,TRUE
+14,Talisman Restaurant,Restaurant,-1.2847,36.8156,Nairobi,"Karen Rd, Nairobi","(020) 272-4321","12PM-10PM",4.6,TRUE
+15,Havana Restaurant,Restaurant,-1.2656,36.8214,Nairobi,"Waiyaki Way, Nairobi","(020) 272-1542","12PM-11PM",4.5,TRUE
+16,Maasai Market,Market,-1.2992,36.8217,Nairobi,"Kenyatta Ave, Nairobi","(020) 272-5513","8AM-6PM",4.3,TRUE
+17,Kenyatta Market,Market,-1.2836,36.8220,Nairobi,"Kenyatta Ave, Nairobi","(020) 272-6161","6AM-8PM",4.2,TRUE
+18,Equity Bank Headquarters,Bank,-1.2747,36.8118,Nairobi,"Upper Hill Rd, Nairobi","(020) 273-1000","8AM-5PM",4.1,TRUE
+19,KCB Bank Headquarters,Bank,-1.2833,36.8233,Nairobi,"Kenyatta Ave, Nairobi","(020) 272-6000","8AM-4PM",4.0,TRUE
+20,Cooperative Bank,Bank,-1.2856,36.8192,Nairobi,"Haile Selassie Ave, Nairobi","(020) 272-6000","8AM-4PM",3.9,TRUE
+21,Moi Teaching & Referral Hospital,Hospital,0.5143,35.2697,Uasin Gishu,"Nandi Rd, Eldoret","(053) 203-3471","24/7",4.3,TRUE
+22,Moi University,School,0.2837,35.2900,Uasin Gishu,"Kesses, Eldoret","(053) 430-001","8AM-5PM",4.2,TRUE
+23,Eldoret Public Library,Library,0.5183,35.2736,Uasin Gishu,"Zion Mall, Eldoret","(053) 206-3444","9AM-6PM",4.0,TRUE
+24,Eldoret Police Station,Police Station,0.5170,35.2700,Uasin Gishu,"Kenyatta St, Eldoret","(053) 206-2222","24/7",4.0,TRUE
+25,Fire Station Eldoret,Fire Station,0.5160,35.2710,Uasin Gishu,"Uganda Rd, Eldoret","(053) 206-3344","24/7",4.1,TRUE
+26,St. Augustine's Cathedral,Church,0.5147,35.2694,Uasin Gishu,"Eldoret","(053) 203-1234","6AM-8PM",4.6,TRUE
+27,AIC Eldoret,Church,0.5178,35.2712,Uasin Gishu,"Eldoret","(053) 206-1122","7AM-9PM",4.4,TRUE
+28,Eldoret Club,Hotel,0.5169,35.2708,Uasin Gishu,"Kenyatta St, Eldoret","(053) 206-1234","24/7",4.3,TRUE
+29,Boma Inn Eldoret,Hotel,0.5156,35.2725,Uasin Gishu,"Eldoret","(053) 206-4321","24/7",4.2,TRUE
+30,Steers Restaurant,Restaurant,0.5172,35.2705,Uasin Gishu,"Eldoret","(053) 206-1234","10AM-10PM",4.1,TRUE
+31,Chicken Inn Restaurant,Restaurant,0.5168,35.2718,Uasin Gishu,"Eldoret","(053) 206-5678","10AM-10PM",4.0,TRUE
+32,Eldoret Market,Market,0.5181,35.2732,Uasin Gishu,"Eldoret","(053) 206-1234","6AM-7PM",4.2,TRUE
+33,KCB Bank Eldoret,Bank,0.5175,35.2702,Uasin Gishu,"Kenyatta St, Eldoret","(053) 206-1234","8AM-4PM",4.0,TRUE
+34,Equity Bank Eldoret,Bank,0.5167,35.2715,Uasin Gishu,"Eldoret","(053) 206-4321","8AM-4PM",3.9,TRUE
+35,Coast General Teaching Hospital,Hospital,-4.0435,39.6682,Mombasa,"Mama Ngina Dr, Mombasa","(041) 231-4201","24/7",4.2,TRUE
+36,Technical University of Mombasa,School,-4.0506,39.6712,Mombasa,"Tudor, Mombasa","(041) 249-2222","8AM-5PM",4.1,TRUE
+37,Mombasa Public Library,Library,-4.0425,39.6715,Mombasa,"Nkrumah Rd, Mombasa","(041) 231-3355","9AM-6PM",4.1,TRUE
+38,Central Police Station Mombasa,Police Station,-4.0430,39.6700,Mombasa,"Mzizima Rd, Mombasa","(041) 222-211","24/7",4.0,TRUE
+39,Fire Station Mombasa,Fire Station,-4.0420,39.6730,Mombasa,"Digo Rd, Mombasa","(041) 231-1122","24/7",4.1,TRUE
+40,Holy Ghost Cathedral,Church,-4.0428,39.6695,Mombasa,"Nkrumah Rd, Mombasa","(041) 231-1234","6AM-8PM",4.5,TRUE
+41,Memon Mosque,Church,-4.0412,39.6728,Mombasa,"Mwembe Tayari, Mombasa","(041) 231-4567","5AM-9PM",4.4,TRUE
+42,Seventh Day Adventist Church,Church,-4.0438,39.6708,Mombasa,"Mwembe Tayari, Mombasa","(041) 231-7890","7AM-7PM",4.3,TRUE
+43,Whitesands Hotel,Hotel,-4.0415,39.6712,Mombasa,"Diani Beach Rd, Mombasa","(041) 231-1234","24/7",4.6,TRUE
+44,Sarova Whitesands Hotel,Hotel,-4.0422,39.6705,Mombasa,"Diani Beach Rd, Mombasa","(041) 231-4321","24/7",4.7,TRUE
+45,Tamarind Restaurant,Restaurant,-4.0432,39.6718,Mombasa,"Diani Beach Rd, Mombasa","(041) 231-5678","11AM-10PM",4.5,TRUE
+46,The Tamarind Restaurant,Restaurant,-4.0418,39.6725,Mombasa,"Diani Beach Rd, Mombasa","(041) 231-7890","12PM-11PM",4.4,TRUE
+47,Mackinnon Market,Market,-4.0425,39.6710,Mombasa,"Nkrumah Rd, Mombasa","(041) 231-1234","6AM-8PM",4.3,TRUE
+48,KCB Bank Mombasa,Bank,-4.0435,39.6682,Mombasa,"Mama Ngina Dr, Mombasa","(041) 231-4201","8AM-4PM",4.0,TRUE
+49,Equity Bank Mombasa,Bank,-4.0418,39.6728,Mombasa,"Digo Rd, Mombasa","(041) 231-5678","8AM-4PM",3.9,TRUE
+50,Kisumu County Hospital,Hospital,-0.1022,34.7617,Kisumu,"Oginga Odinga St, Kisumu","(057) 202-4961","24/7",4.1,TRUE
+51,Maseno University,School,-0.0833,34.6000,Kisumu,"Maseno","(057) 351-1234","8AM-5PM",4.2,TRUE
+52,Kisumu Public Library,Library,-0.1005,34.7580,Kisumu,"Oginga Odinga St, Kisumu","(057) 202-1122","9AM-6PM",4.2,TRUE
+53,Kisumu Central Police,Police Station,-0.0990,34.7600,Kisumu,"Oginga Odinga St, Kisumu","(057) 202-3333","24/7",4.1,TRUE
+54,Fire Station Kisumu,Fire Station,-0.1010,34.7570,Kisumu,"Jomo Kenyatta Hwy, Kisumu","(057) 202-4455","24/7",4.0,TRUE
+55,Kisumu Impala Sanctuary,Park,-0.1200,34.7400,Kisumu,"Dunga Beach, Kisumu","(057) 202-1234","6AM-6PM",4.4,TRUE
+56,St. Teresa's Cathedral,Church,-0.1018,34.7592,Kisumu,"Oginga Odinga St, Kisumu","(057) 202-1234","6AM-8PM",4.6,TRUE
+57,Nyabondo Church,Church,-0.0995,34.7615,Kisumu,"Kisumu","(057) 202-4567","7AM-9PM",4.4,TRUE
+58,Seventh Day Adventist Church Kisumu,Church,-0.1028,34.7588,Kisumu,"Kisumu","(057) 202-7890","7AM-7PM",4.3,TRUE
+59,Imperial Hotel Kisumu,Hotel,-0.1002,34.7612,Kisumu,"Oginga Odinga St, Kisumu","(057) 202-1234","24/7",4.3,TRUE
+60,Lake Victoria Sunset Hotel,Hotel,-0.1015,34.7598,Kisumu,"Kisumu","(057) 202-4567","24/7",4.2,TRUE
+61,Kiboko Bay Restaurant,Restaurant,-0.0988,34.7625,Kisumu,"Kisumu","(057) 202-7890","11AM-10PM",4.1,TRUE
+62,Afrika Restaurant Kisumu,Restaurant,-0.1025,34.7608,Kisumu,"Kisumu","(057) 202-3456","12PM-11PM",4.0,TRUE
+63,Kibuye Market,Market,-0.1012,34.7618,Kisumu,"Kisumu","(057) 202-1234","6AM-7PM",4.2,TRUE
+64,KCB Bank Kisumu,Bank,-0.1008,34.7595,Kisumu,"Oginga Odinga St, Kisumu","(057) 202-1234","8AM-4PM",4.0,TRUE
+65,Equity Bank Kisumu,Bank,-0.0998,34.7622,Kisumu,"Kisumu","(057) 202-4567","8AM-4PM",3.9,TRUE
+66,Nakuru Level 5 Hospital,Hospital,-0.3031,36.0800,Nakuru,"Nakuru - Eldoret Rd, Nakuru","(051) 221-5100","24/7",4.0,TRUE
+67,Egerton University,School,-0.3833,35.9333,Nakuru,"Njoro","(051) 221-7890","8AM-5PM",4.1,TRUE
+68,Nakuru Public Library,Library,-0.3017,36.0800,Nakuru,"Kenyatta Ave, Nakuru","(051) 221-4567","9AM-6PM",4.2,TRUE
+69,Nakuru Police Station,Police Station,-0.3020,36.0780,Nakuru,"Kenyatta Ave, Nakuru","(051) 221-3111","24/7",3.9,TRUE
+70,Fire Station Nakuru,Fire Station,-0.3000,36.0790,Nakuru,"Kenyatta Ave, Nakuru","(051) 221-5566","24/7",4.0,TRUE
+71,Menengai Crater,Park,-0.2000,36.0833,Nakuru,"Menengai, Nakuru","N/A","6AM-6PM",4.5,FALSE
+72,St. Andrews Church Nakuru,Church,-0.3015,36.0812,Nakuru,"Nakuru","(051) 221-1234","7AM-8PM",4.5,TRUE
+73,AIC Church Nakuru,Church,-0.3028,36.0788,Nakuru,"Nakuru","(051) 221-4567","6AM-9PM",4.3,TRUE
+74,Cathedral of Nakuru,Church,-0.3005,36.0795,Nakuru,"Nakuru","(051) 221-7890","6AM-8PM",4.4,TRUE
+75,Lake Nakuru Lodge,Hotel,-0.2988,36.0825,Nakuru,"Lake Nakuru","(051) 221-1234","24/7",4.2,TRUE
+76,Sarova Lion Hill Lodge,Hotel,-0.3012,36.0808,Nakuru,"Nakuru","(051) 221-4567","24/7",4.3,TRUE
+77,Carnivore Restaurant Nakuru,Restaurant,-0.3025,36.0792,Nakuru,"Nakuru","(051) 221-7890","11AM-10PM",4.1,TRUE
+78,Merica Restaurant,Restaurant,-0.2998,36.0818,Nakuru,"Nakuru","(051) 221-1234","12PM-11PM",4.0,TRUE
+79,Nakuru Market,Market,-0.3035,36.0815,Nakuru,"Kenyatta Ave, Nakuru","(051) 221-3111","6AM-7PM",4.3,TRUE
+80,KCB Bank Nakuru,Bank,-0.3018,36.0802,Nakuru,"Kenyatta Ave, Nakuru","(051) 221-4567","8AM-4PM",4.0,TRUE
+81,Equity Bank Nakuru,Bank,-0.3008,36.0798,Nakuru,"Nakuru","(051) 221-7890","8AM-4PM",3.9,TRUE
+82,Kakamega County Hospital,Hospital,0.2827,34.7519,Kakamega,"Kakamega","(056) 203-1234","24/7",4.0,TRUE
+83,Masinde Muliro University,School,0.2850,34.7500,Kakamega,"Kakamega","(056) 313-5678","8AM-5PM",4.1,TRUE
+84,Kakamega Library,Library,0.2830,34.7520,Kakamega,"Kakamega","(056) 203-4567","9AM-6PM",4.0,TRUE
+85,Kakamega Police Station,Police Station,0.2820,34.7510,Kakamega,"Kakamega","(056) 203-7890","24/7",3.9,TRUE
+86,Kakamega Fire Station,Fire Station,0.2840,34.7530,Kakamega,"Kakamega","(056) 203-1122","24/7",4.0,TRUE
+87,St. Joseph's Cathedral Kakamega,Church,0.2838,34.7528,Kakamega,"Kakamega","(056) 203-1234","6AM-8PM",4.6,TRUE
+88,Salvation Army Church Kakamega,Church,0.2848,34.7518,Kakamega,"Kakamega","(056) 203-4567","7AM-9PM",4.4,TRUE
+89,Seventh Day Adventist Church Kakamega,Church,0.2825,34.7525,Kakamega,"Kakamega","(056) 203-7890","7AM-7PM",4.3,TRUE
+90,Kakamega Hotel,Hotel,0.2835,34.7515,Kakamega,"Kakamega","(056) 203-1234","24/7",4.1,TRUE
+91,White Palace Hotel Kakamega,Hotel,0.2845,34.7522,Kakamega,"Kakamega","(056) 203-4567","24/7",4.0,TRUE
+92,Chicken Inn Kakamega,Restaurant,0.2832,34.7518,Kakamega,"Kakamega","(056) 203-1234","10AM-10PM",4.1,TRUE
+93,Kakamega Restaurant,Restaurant,0.2842,34.7528,Kakamega,"Kakamega","(056) 203-4567","11AM-10PM",4.0,TRUE
+94,Kakamega Market,Market,0.2838,34.7522,Kakamega,"Kakamega","(056) 203-1234","6AM-7PM",4.2,TRUE
+95,KCB Bank Kakamega,Bank,0.2845,34.7515,Kakamega,"Kakamega","(056) 203-1234","8AM-4PM",4.0,TRUE
+96,Equity Bank Kakamega,Bank,0.2835,34.7525,Kakamega,"Kakamega","(056) 203-4567","8AM-4PM",3.9,TRUE
+97,Kisii Teaching & Referral Hospital,Hospital,-0.6775,34.7793,Kisii,"Kisii","(058) 222-1234","24/7",4.2,TRUE
+98,Kisii University,School,-0.6775,34.7793,Kisii,"Kisii","(058) 222-5678","8AM-5PM",4.1,TRUE
+99,Kisii Public Library,Library,-0.6780,34.7800,Kisii,"Kisii","(058) 222-3456","9AM-6PM",4.0,TRUE
+100,Kisii Police Station,Police Station,-0.6770,34.7780,Kisii,"Kisii","(058) 222-7890","24/7",4.0,TRUE
+101,Kisii Fire Station,Fire Station,-0.6785,34.7790,Kisii,"Kisii","(058) 222-1122","24/7",4.1,TRUE
+102,St. Vincent's Cathedral Kisii,Church,-0.6788,34.7798,Kisii,"Kisii","(058) 222-1234","6AM-8PM",4.5,TRUE
+103,Seventh Day Adventist Church Kisii,Church,-0.6772,34.7785,Kisii,"Kisii","(058) 222-4567","7AM-7PM",4.3,TRUE
+104,AIC Church Kisii,Church,-0.6795,34.7792,Kisii,"Kisii","(058) 222-7890","6AM-9PM",4.2,TRUE
+105,Kisii Hotel,Hotel,-0.6782,34.7788,Kisii,"Kisii","(058) 222-1234","24/7",4.0,TRUE
+106,Bougainville Hotel Kisii,Hotel,-0.6778,34.7795,Kisii,"Kisii","(058) 222-4567","24/7",4.1,TRUE
+107,Kisii Restaurant,Restaurant,-0.6792,34.7782,Kisii,"Kisii","(058) 222-7890","10AM-10PM",4.0,TRUE
+108,Bougainville Restaurant,Restaurant,-0.6785,34.7798,Kisii,"Kisii","(058) 222-4567","11AM-11PM",3.9,TRUE
+109,Kisii Market,Market,-0.6788,34.7792,Kisii,"Kisii","(058) 222-1234","6AM-7PM",4.1,TRUE
+110,KCB Bank Kisii,Bank,-0.6795,34.7795,Kisii,"Kisii","(058) 222-1234","8AM-4PM",4.0,TRUE
+111,Equity Bank Kisii,Bank,-0.6782,34.7788,Kisii,"Kisii","(058) 222-4567","8AM-4PM",3.9,TRUE
+112,Meru Level 5 Hospital,Hospital,0.0500,37.6500,Meru,"Meru","(064) 312-1234","24/7",4.1,TRUE
+113,Meru University,School,0.0550,37.6450,Meru,"Meru","(064) 313-5678","8AM-5PM",4.0,TRUE
+114,Meru Public Library,Library,0.0510,37.6510,Meru,"Meru","(064) 312-3456","9AM-6PM",4.0,TRUE
+115,Meru Police Station,Police Station,0.0490,37.6490,Meru,"Meru","(064) 312-7890","24/7",3.9,TRUE
+116,Meru Fire Station,Fire Station,0.0520,37.6520,Meru,"Meru","(064) 312-1122","24/7",4.0,TRUE
+117,St. Joseph's Cathedral Meru,Church,0.0518,37.6508,Meru,"Meru","(064) 312-1234","6AM-8PM",4.6,TRUE
+118,Seventh Day Adventist Church Meru,Church,0.0498,37.6518,Meru,"Meru","(064) 312-4567","7AM-7PM",4.4,TRUE
+119,Meru Methodist Church,Church,0.0528,37.6492,Meru,"Meru","(064) 312-7890","6AM-9PM",4.3,TRUE
+120,Meru Hotel,Hotel,0.0508,37.6502,Meru,"Meru","(064) 312-1234","24/7",4.1,TRUE
+121,Prince Court Hotel Meru,Hotel,0.0515,37.6515,Meru,"Meru","(064) 312-4567","24/7",4.0,TRUE
+122,Meru Restaurant,Restaurant,0.0495,37.6505,Meru,"Meru","(064) 312-7890","10AM-10PM",4.0,TRUE
+123,Meru Market,Market,0.0522,37.6498,Meru,"Meru","(064) 312-7890","6AM-7PM",4.2,TRUE
+124,KCB Bank Meru,Bank,0.0512,37.6508,Meru,"Meru","(064) 312-1234","8AM-4PM",4.0,TRUE
+125,Equity Bank Meru,Bank,0.0505,37.6512,Meru,"Meru","(064) 312-4567","8AM-4PM",3.9,TRUE
+126,Kericho County Hospital,Hospital,-0.3690,35.2830,Kericho,"Kericho","(052) 212-1234","24/7",4.0,TRUE
+127,Kericho Library,Library,-0.3680,35.2840,Kericho,"Kericho","(052) 212-3456","9AM-6PM",4.0,TRUE
+128,Kericho Police Station,Police Station,-0.3700,35.2820,Kericho,"Kericho","(052) 212-7890","24/7",4.0,TRUE
+129,Kericho Fire Station,Fire Station,-0.3670,35.2850,Kericho,"Kericho","(052) 212-1122","24/7",4.1,TRUE
+130,St. Peter's Cathedral Kericho,Church,-0.3688,35.2848,Kericho,"Kericho","(052) 212-1234","6AM-8PM",4.7,TRUE
+131,Seventh Day Adventist Church Kericho,Church,-0.3695,35.2835,Kericho,"Kericho","(052) 212-4567","7AM-7PM",4.4,TRUE
+132,Kericho Green Hotel,Hotel,-0.3675,35.2845,Kericho,"Kericho","(052) 212-1234","24/7",4.2,TRUE
+133,Sunrise Hotel Kericho,Hotel,-0.3698,35.2838,Kericho,"Kericho","(052) 212-7890","24/7",4.1,TRUE
+134,Kericho Restaurant,Restaurant,-0.3685,35.2842,Kericho,"Kericho","(052) 212-3456","11AM-10PM",4.0,TRUE
+135,Kericho Tea Hotel Restaurant,Restaurant,-0.3705,35.2832,Kericho,"Kericho","(052) 212-7890","10AM-11PM",3.9,TRUE
+136,Kericho Market,Market,-0.3692,35.2848,Kericho,"Kericho","(052) 212-1234","6AM-7PM",4.3,TRUE
+137,KCB Bank Kericho,Bank,-0.3688,35.2848,Kericho,"Kericho","(052) 212-1234","8AM-4PM",4.0,TRUE
+138,Equity Bank Kericho,Bank,-0.3695,35.2835,Kericho,"Kericho","(052) 212-4567","8AM-4PM",3.9,TRUE
+139,Machakos Level 5 Hospital,Hospital,-1.5167,37.2667,Machakos,"Machakos","(044) 212-1234","24/7",4.1,TRUE
+140,Machakos University,School,-1.5170,37.2670,Machakos,"Machakos","(044) 212-5678","8AM-5PM",4.0,TRUE
+141,Machakos Library,Library,-1.5160,37.2660,Machakos,"Machakos","(044) 212-3456","9AM-6PM",4.0,TRUE
+142,Machakos Police Station,Police Station,-1.5180,37.2680,Machakos,"Machakos","(044) 212-7890","24/7",3.9,TRUE
+143,Machakos Fire Station,Fire Station,-1.5150,37.2650,Machakos,"Machakos","(044) 212-1122","24/7",4.0,TRUE
+144,St. Paul's Cathedral Machakos,Church,-1.5178,37.2678,Machakos,"Machakos","(044) 212-1234","6AM-8PM",4.6,TRUE
+145,Seventh Day Adventist Church Machakos,Church,-1.5165,37.2665,Machakos,"Machakos","(044) 212-4567","7AM-7PM",4.4,TRUE
+146,Machakos Catholic Church,Church,-1.5185,37.2675,Machakos,"Machakos","(044) 212-7890","6AM-9PM",4.3,TRUE
+147,Machakos Hotel,Hotel,-1.5172,37.2672,Machakos,"Machakos","(044) 212-1234","24/7",4.1,TRUE
+148,Blue Post Hotel Machakos,Hotel,-1.5168,37.2678,Machakos,"Machakos","(044) 212-4567","24/7",4.0,TRUE
+149,Machakos Restaurant,Restaurant,-1.5182,37.2672,Machakos,"Machakos","(044) 212-7890","10AM-10PM",4.0,TRUE
+150,Machakos Market,Market,-1.5175,37.2675,Machakos,"Machakos","(044) 212-1234","6AM-7PM",4.2,TRUE
+151,KCB Bank Machakos,Bank,-1.5168,37.2678,Machakos,"Machakos","(044) 212-4567","8AM-4PM",4.0,TRUE
+152,Equity Bank Machakos,Bank,-1.5172,37.2672,Machakos,"Machakos","(044) 212-7890","8AM-4PM",3.9,TRUE
+153,Embu Level 5 Hospital,Hospital,-0.5333,37.4500,Embu,"Embu","(068) 212-1234","24/7",4.0,TRUE
+154,University of Embu,School,-0.5340,37.4510,Embu,"Embu","(068) 212-5678","8AM-5PM",4.1,TRUE
+155,Embu Public Library,Library,-0.5320,37.4490,Embu,"Embu","(068) 212-3456","9AM-6PM",4.0,TRUE
+156,Embu Police Station,Police Station,-0.5350,37.4520,Embu,"Embu","(068) 212-7890","24/7",4.0,TRUE
+157,Embu Fire Station,Fire Station,-0.5310,37.4480,Embu,"Embu","(068) 212-1122","24/7",4.1,TRUE
+158,St. Paul's Cathedral Embu,Church,-0.5338,37.4508,Embu,"Embu","(068) 212-1234","6AM-8PM",4.5,TRUE
+159,Seventh Day Adventist Church Embu,Church,-0.5325,37.4495,Embu,"Embu","(068) 212-4567","7AM-7PM",4.3,TRUE
+160,Embu Hotel,Hotel,-0.5345,37.4515,Embu,"Embu","(068) 212-1234","24/7",4.0,TRUE
+161,Green Grove Hotel Embu,Hotel,-0.5335,37.4505,Embu,"Embu","(068) 212-5678","24/7",4.1,TRUE
+162,Embu Restaurant,Restaurant,-0.5328,37.4498,Embu,"Embu","(068) 212-4567","10AM-10PM",4.0,TRUE
+163,Embu Market,Market,-0.5342,37.4512,Embu,"Embu","(068) 212-1234","6AM-7PM",4.2,TRUE
+164,KCB Bank Embu,Bank,-0.5335,37.4505,Embu,"Embu","(068) 212-1234","8AM-4PM",4.0,TRUE
+165,Equity Bank Embu,Bank,-0.5348,37.4498,Embu,"Embu","(068) 212-4567","8AM-4PM",3.9,TRUE
+166,Nyeri County Hospital,Hospital,-0.4200,36.9500,Nyeri,"Nyeri","(061) 203-1234","24/7",4.2,TRUE
+167,Dedan Kimathi University,School,-0.4250,36.9550,Nyeri,"Nyeri","(061) 203-5678","8AM-5PM",4.1,TRUE
+168,Nyeri Public Library,Library,-0.4190,36.9490,Nyeri,"Nyeri","(061) 203-3456","9AM-6PM",4.1,TRUE
+169,Nyeri Police Station,Police Station,-0.4220,36.9520,Nyeri,"Nyeri","(061) 203-7890","24/7",4.0,TRUE
+170,Nyeri Fire Station,Fire Station,-0.4180,36.9480,Nyeri,"Nyeri","(061) 203-1122","24/7",4.0,TRUE
+171,St. Peter's Cathedral Nyeri,Church,-0.4218,36.9518,Nyeri,"Nyeri","(061) 203-1234","6AM-8PM",4.6,TRUE
+172,Seventh Day Adventist Church Nyeri,Church,-0.4198,36.9498,Nyeri,"Nyeri","(061) 203-4567","7AM-7PM",4.4,TRUE
+173,Nyeri Hotel,Hotel,-0.4208,36.9508,Nyeri,"Nyeri","(061) 203-1234","24/7",4.1,TRUE
+174,Outspan Hotel Nyeri,Hotel,-0.4215,36.9515,Nyeri,"Nyeri","(061) 203-4567","24/7",4.0,TRUE
+175,Nyeri Restaurant,Restaurant,-0.4195,36.9505,Nyeri,"Nyeri","(061) 203-7890","10AM-10PM",4.0,TRUE
+176,Nyeri Market,Market,-0.4212,36.9512,Nyeri,"Nyeri","(061) 203-1234","6AM-7PM",4.2,TRUE
+177,KCB Bank Nyeri,Bank,-0.4205,36.9508,Nyeri,"Nyeri","(061) 203-1234","8AM-4PM",4.0,TRUE
+178,Equity Bank Nyeri,Bank,-0.4218,36.9518,Nyeri,"Nyeri","(061) 203-4567","8AM-4PM",3.9,TRUE
+179,Murang'a County Hospital,Hospital,-0.7167,37.1500,Murang'a,"Murang'a","(060) 212-1234","24/7",4.0,TRUE
+180,Murang'a University,School,-0.7170,37.1510,Murang'a,"Murang'a","(060) 212-5678","8AM-5PM",4.1,TRUE
+181,Murang'a Library,Library,-0.7160,37.1490,Murang'a,"Murang'a","(060) 212-3456","9AM-6PM",4.0,TRUE
+182,Murang'a Police Station,Police Station,-0.7180,37.1520,Murang'a,"Murang'a","(060) 212-7890","24/7",3.9,TRUE
+183,Murang'a Fire Station,Fire Station,-0.7150,37.1480,Murang'a,"Murang'a","(060) 212-1122","24/7",4.0,TRUE
+184,St. Joseph's Cathedral Murang'a,Church,-0.7178,37.1518,Murang'a","Murang'a","(060) 212-1234","6AM-8PM",4.5,TRUE
+185,Seventh Day Adventist Church Murang'a,Church,-0.7165,37.1495,Murang'a","Murang'a","(060) 212-4567","7AM-7PM",4.3,TRUE
+186,Murang'a Hotel,Hotel,-0.7175,37.1515,Murang'a","Murang'a","(060) 212-1234","24/7",4.0,TRUE
+187,Thika Falls Hotel,Hotel,-0.7168,37.1498,Murang'a","Murang'a","(060) 212-4567","24/7",4.1,TRUE
+188,Murang'a Restaurant,Restaurant,-0.7185,37.1525,Murang'a","Murang'a","(060) 212-7890","10AM-10PM",4.0,TRUE
+189,Murang'a Market,Market,-0.7172,37.1512,Murang'a","Murang'a","(060) 212-1234","6AM-7PM",4.2,TRUE
+190,KCB Bank Murang'a,Bank,-0.7178,37.1518,Murang'a","Murang'a","(060) 212-1234","8AM-4PM",4.0,TRUE
+191,Equity Bank Murang'a,Bank,-0.7165,37.1495,Murang'a","Murang'a","(060) 212-4567","8AM-4PM",3.9,TRUE
+192,Garissa County Hospital,Hospital,-0.4569,39.6583,Garissa,"Garissa","(046) 212-1234","24/7",3.9,TRUE
+193,Garissa University,School,-0.4570,39.6590,Garissa,"Garissa","(046) 212-5678","8AM-5PM",4.0,TRUE
+194,Garissa Public Library,Library,-0.4560,39.6580,Garissa,"Garissa","(046) 212-3456","9AM-6PM",3.9,TRUE
+195,Garissa Police Station,Police Station,-0.4580,39.6600,Garissa,"Garissa","(046) 212-7890","24/7",3.8,TRUE
+196,Garissa Fire Station,Fire Station,-0.4550,39.6570,Garissa,"Garissa","(046) 212-1122","24/7",3.9,TRUE
+197,Garissa Main Mosque,Church,-0.4578,39.6598,Garissa,"Garissa","(046) 212-5678","5AM-9PM",4.4,TRUE
+198,Seventh Day Adventist Church Garissa,Church,-0.4565,39.6585,Garissa,"Garissa","(046) 212-3456","7AM-7PM",4.2,TRUE
+199,Garissa Hotel,Hotel,-0.4575,39.6595,Garissa,"Garissa","(046) 212-5678","24/7",3.8,TRUE
+200,Northern Frontier Hotel,Hotel,-0.4568,39.6588,Garissa,"Garissa","(046) 212-3456","24/7",3.7,TRUE
+201,Garissa Restaurant,Restaurant,-0.4585,39.6605,Garissa,"Garissa","(046) 212-7890","10AM-10PM",3.8,TRUE
+202,Garissa Market,Market,-0.4572,39.6592,Garissa,"Garissa","(046) 212-5678","6AM-7PM",4.1,TRUE
+203,KCB Bank Garissa,Bank,-0.4588,39.6605,Garissa,"Garissa","(046) 212-7890","8AM-4PM",3.9,TRUE
+204,Equity Bank Garissa,Bank,-0.4575,39.6595,Garissa,"Garissa","(046) 212-5678","8AM-4PM",3.8,TRUE
+205,Mandera County Hospital,Hospital,3.9333,41.8667,Mandera,"Mandera","(046) 212-5678","24/7",3.8,TRUE
+206,Mandera Library,Library,3.9340,41.8670,Mandera,"Mandera","(046) 212-3456","9AM-6PM",3.7,TRUE
+207,Mandera Police Station,Police Station,3.9320,41.8660,Mandera,"Mandera","(046) 212-7890","24/7",3.7,TRUE
+208,Mandera Fire Station,Fire Station,3.9350,41.8680,Mandera,"Mandera","(046) 212-1122","24/7",3.8,TRUE
+209,Mandera Main Mosque,Church,3.9348,41.8678,Mandera,"Mandera","(046) 212-3456","5AM-9PM",4.3,TRUE
+210,Seventh Day Adventist Church Mandera,Church,3.9335,41.8665,Mandera,"Mandera","(046) 212-5678","7AM-7PM",4.1,TRUE
+211,Mandera Hotel,Hotel,3.9345,41.8675,Mandera,"Mandera","(046) 212-3456","24/7",3.6,TRUE
+212,Jubba Hotel Mandera,Hotel,3.9338,41.8668,Mandera,"Mandera","(046) 212-5678","24/7",3.5,TRUE
+213,Mandera Restaurant,Restaurant,3.9355,41.8685,Mandera,"Mandera","(046) 212-1122","10AM-10PM",3.7,TRUE
+214,Mandera Market,Market,3.9342,41.8672,Mandera,"Mandera","(046) 212-3456","6AM-7PM",4.0,TRUE
+215,KCB Bank Mandera,Bank,3.9348,41.8678,Mandera,"Mandera","(046) 212-3456","8AM-4PM",3.7,TRUE
+216,Equity Bank Mandera,Bank,3.9335,41.8665,Mandera,"Mandera","(046) 212-5678","8AM-4PM",3.6,TRUE
+217,Wajir County Hospital,Hospital,1.7500,40.0667,Wajir,"Wajir","(046) 212-7890","24/7",3.8,TRUE
+218,Wajir Library,Library,1.7510,40.0670,Wajir,"Wajir","(046) 212-3456","9AM-6PM",3.7,TRUE
+219,Wajir Police Station,Police Station,1.7490,40.0660,Wajir,"Wajir","(046) 212-7890","24/7",3.7,TRUE
+220,Wajir Fire Station,Fire Station,1.7520,40.0680,Wajir,"Wajir","(046) 212-1122","24/7",3.8,TRUE
+221,Wajir Main Mosque,Church,1.7518,40.0678,Wajir,"Wajir","(046) 212-3456","5AM-9PM",4.2,TRUE
+222,Seventh Day Adventist Church Wajir,Church,1.7505,40.0665,Wajir,"Wajir","(046) 212-7890","7AM-7PM",4.0,TRUE
+223,Wajir Hotel,Hotel,1.7515,40.0675,Wajir,"Wajir","(046) 212-3456","24/7",3.6,TRUE
+224,Northern Frontier Hotel Wajir,Hotel,1.7508,40.0668,Wajir,"Wajir","(046) 212-3456","24/7",3.5,TRUE
+225,Wajir Restaurant,Restaurant,1.7525,40.0685,Wajir,"Wajir","(046) 212-1122","10AM-10PM",3.7,TRUE
+226,Wajir Market,Market,1.7512,40.0672,Wajir,"Wajir","(046) 212-3456","6AM-7PM",4.1,TRUE
+227,KCB Bank Wajir,Bank,1.7518,40.0678,Wajir,"Wajir","(046) 212-3456","8AM-4PM",3.7,TRUE
+228,Equity Bank Wajir,Bank,1.7505,40.0665,Wajir,"Wajir","(046) 212-7890","8AM-4PM",3.6,TRUE
+229,Kitale County Hospital,Hospital,1.0167,35.0000,Trans Nzoia,"Kitale","(054) 312-1234","24/7",4.0,TRUE
+230,Kitale Library,Library,1.0170,35.0010,Trans Nzoia,"Kitale","(054) 312-3456","9AM-6PM",4.0,TRUE
+231,Kitale Police Station,Police Station,1.0150,34.9990,Trans Nzoia,"Kitale","(054) 312-7890","24/7",3.9,TRUE
+232,Kitale Fire Station,Fire Station,1.0180,35.0020,Trans Nzoia,"Kitale","(054) 312-1122","24/7",4.0,TRUE
+233,Kitale Cathedral,Church,1.0178,35.0018,Trans Nzoia,"Kitale","(054) 312-1234","6AM-8PM",4.7,TRUE
+234,Seventh Day Adventist Church Kitale,Church,1.0165,35.0005,Trans Nzoia,"Kitale","(054) 312-3456","7AM-7PM",4.3,TRUE
+235,Kitale Hotel,Hotel,1.0175,35.0015,Trans Nzoia,"Kitale","(054) 312-1234","24/7",3.9,TRUE
+236,Rafiki Hotel Kitale,Hotel,1.0168,35.0008,Trans Nzoia,"Kitale","(054) 312-3456","24/7",3.8,TRUE
+237,Kitale Restaurant,Restaurant,1.0185,35.0025,Trans Nzoia,"Kitale","(054) 312-1122","10AM-10PM",3.8,TRUE
+238,Kitale Market,Market,1.0172,35.0012,Trans Nzoia,"Kitale","(054) 312-1234","6AM-7PM",4.2,TRUE
+239,KCB Bank Kitale,Bank,1.0178,35.0018,Trans Nzoia,"Kitale","(054) 312-1234","8AM-4PM",3.9,TRUE
+240,Equity Bank Kitale,Bank,1.0165,35.0005,Trans Nzoia,"Kitale","(054) 312-3456","8AM-4PM",3.8,TRUE
+241,Bungoma County Hospital,Hospital,0.5667,34.5667,Bungoma,"Bungoma","(055) 303-1234","24/7",4.0,TRUE
+242,Bungoma Library,Library,0.5670,34.5670,Bungoma,"Bungoma","(055) 303-3456","9AM-6PM",4.0,TRUE
+243,Bungoma Police Station,Police Station,0.5650,34.5650,Bungoma,"Bungoma","(055) 303-7890","24/7",3.9,TRUE
+244,Bungoma Fire Station,Fire Station,0.5680,34.5680,Bungoma,"Bungoma","(055) 303-1122","24/7",4.0,TRUE
+245,Bungoma Cathedral,Church,0.5678,34.5678,Bungoma,"Bungoma","(055) 303-1234","6AM-8PM",4.6,TRUE
+246,Seventh Day Adventist Church Bungoma,Church,0.5665,34.5665,Bungoma,"Bungoma","(055) 303-3456","7AM-7PM",4.3,TRUE
+247,Bungoma Hotel,Hotel,0.5675,34.5675,Bungoma,"Bungoma","(055) 303-1234","24/7",3.8,TRUE
+248,Western Hotel Bungoma,Hotel,0.5668,34.5668,Bungoma,"Bungoma","(055) 303-3456","24/7",3.7,TRUE
+249,Bungoma Restaurant,Restaurant,0.5685,34.5685,Bungoma,"Bungoma","(055) 303-1122","10AM-10PM",3.8,TRUE
+250,Bungoma Market,Market,0.5672,34.5672,Bungoma,"Bungoma","(055) 303-1234","6AM-7PM",4.1,TRUE
+251,KCB Bank Bungoma,Bank,0.5678,34.5678,Bungoma,"Bungoma","(055) 303-1234","8AM-4PM",3.9,TRUE
+252,Equity Bank Bungoma,Bank,0.5675,34.5675,Bungoma,"Bungoma","(055) 303-1234","8AM-4PM",3.8,TRUE
+253,Busia County Hospital,Hospital,0.4667,34.1167,Busia,"Busia","(055) 222-1234","24/7",4.0,TRUE
+254,Busia Library,Library,0.4670,34.1170,Busia,"Busia","(055) 222-3456","9AM-6PM",3.9,TRUE
+255,Busia Police Station,Police Station,0.4650,34.1150,Busia,"Busia","(055) 222-7890","24/7",3.9,TRUE
+256,Busia Fire Station,Fire Station,0.4680,34.1180,Busia,"Busia","(055) 222-1122","24/7",4.0,TRUE
+257,Busia Cathedral,Church,0.4678,34.1178,Busia,"Busia","(055) 222-1234","6AM-8PM",4.5,TRUE
+258,Seventh Day Adventist Church Busia,Church,0.4665,34.1165,Busia,"Busia","(055) 222-3456","7AM-7PM",4.2,TRUE
+259,Busia Hotel,Hotel,0.4675,34.1175,Busia,"Busia","(055) 222-1234","24/7",3.7,TRUE
+260,Alupe Beach Hotel,Hotel,0.4668,34.1168,Busia,"Busia","(055) 222-3456","24/7",3.6,TRUE
+261,Busia Restaurant,Restaurant,0.4685,34.1185,Busia,"Busia","(055) 222-1122","10AM-10PM",3.8,TRUE
+262,Busia Market,Market,0.4672,34.1172,Busia,"Busia","(055) 222-1234","6AM-7PM",4.0,TRUE
+263,KCB Bank Busia,Bank,0.4678,34.1178,Busia,"Busia","(055) 222-1234","8AM-4PM",3.9,TRUE
+264,Equity Bank Busia,Bank,0.4675,34.1175,Busia,"Busia","(055) 222-1234","8AM-4PM",3.8,TRUE
+265,Siaya County Hospital,Hospital,0.0667,34.2833,Siaya,"Siaya","(057) 202-5678","24/7",4.0,TRUE
+266,Siaya Library,Library,0.0670,34.2840,Siaya,"Siaya","(057) 202-3456","9AM-6PM",4.0,TRUE
+267,Siaya Police Station,Police Station,0.0650,34.2820,Siaya,"Siaya","(057) 202-7890","24/7",3.9,TRUE
+268,Siaya Fire Station,Fire Station,0.0680,34.2850,Siaya,"Siaya","(057) 202-1122","24/7",4.0,TRUE
+269,St. Peter's Cathedral Siaya,Church,0.0678,34.2848,Siaya,"Siaya","(057) 202-5678","6AM-8PM",4.6,TRUE
+270,Seventh Day Adventist Church Siaya,Church,0.0665,34.2835,Siaya,"Siaya","(057) 202-3456","7AM-7PM",4.2,TRUE
+271,St. Mary's Mission Siaya,Church,0.0685,34.2855,Siaya,"Siaya","(057) 202-1122","6AM-9PM",4.1,TRUE
+272,Swara Hotel Siaya,Hotel,0.0672,34.2842,Siaya,"Siaya","(057) 202-5678","24/7",3.8,TRUE
+273,Lake Victoria Hotel Siaya,Hotel,0.0668,34.2838,Siaya,"Siaya","(057) 202-3456","24/7",3.7,TRUE
+274,Siaya Restaurant,Restaurant,0.0682,34.2852,Siaya,"Siaya","(057) 202-1122","10AM-10PM",3.9,TRUE
+275,Bondo Market,Market,0.0675,34.2845,Siaya,"Siaya","(057) 202-5678","6AM-7PM",4.1,TRUE
+276,KCB Bank Siaya,Bank,0.0678,34.2848,Siaya,"Siaya","(057) 202-5678","8AM-4PM",3.8,TRUE
+277,Equity Bank Siaya,Bank,0.0665,34.2835,Siaya,"Siaya","(057) 202-3456","8AM-4PM",3.7,TRUE
+278,Homa Bay County Hospital,Hospital,-0.5167,34.4667,Homa Bay,"Homa Bay","(059) 222-1234","24/7",4.0,TRUE
+279,Homa Bay Library,Library,-0.5170,34.4670,Homa Bay,"Homa Bay","(059) 222-3456","9AM-6PM",3.9,TRUE
+280,Homa Bay Police Station,Police Station,-0.5180,34.4650,Homa Bay,"Homa Bay","(059) 222-7890","24/7",3.9,TRUE
+281,Homa Bay Fire Station,Fire Station,-0.5160,34.4680,Homa Bay,"Homa Bay","(059) 222-1122","24/7",4.0,TRUE
+282,St. Paul's Cathedral Homa Bay,Church,-0.5178,34.4678,Homa Bay,"Homa Bay","(059) 222-1234","6AM-8PM",4.5,TRUE
+283,Seventh Day Adventist Church Homa Bay,Church,-0.5165,34.4665,Homa Bay,"Homa Bay","(059) 222-3456","7AM-7PM",4.3,TRUE
+284,Homa Bay Hotel,Hotel,-0.5175,34.4675,Homa Bay,"Homa Bay","(059) 222-1234","24/7",3.8,TRUE
+285,Lake Victoria Hotel Homa Bay,Hotel,-0.5168,34.4668,Homa Bay,"Homa Bay","(059) 222-3456","24/7",3.7,TRUE
+286,Homa Bay Restaurant,Restaurant,-0.5185,34.4655,Homa Bay,"Homa Bay","(059) 222-7890","10AM-10PM",3.9,TRUE
+287,Homa Bay Market,Market,-0.5172,34.4672,Homa Bay,"Homa Bay","(059) 222-1234","6AM-7PM",4.1,TRUE
+288,KCB Bank Homa Bay,Bank,-0.5178,34.4678,Homa Bay,"Homa Bay","(059) 222-1234","8AM-4PM",3.8,TRUE
+289,Equity Bank Homa Bay,Bank,-0.5165,34.4665,Homa Bay,"Homa Bay","(059) 222-3456","8AM-4PM",3.7,TRUE
+100,Hotel Serena Nairobi,Hotel,-1.2678,36.8123,Nairobi,"Central Park, Nairobi","(020) 284-5000","24/7",4.7,TRUE
+69,Garissa University,School,-0.4570,39.6590,Garissa,"Garissa","(046) 212-5678","8AM-5PM",4.0,TRUE
+70,Garissa Public Library,Library,-0.4560,39.6580,Garissa,"Garissa","(046) 212-3456","9AM-6PM",3.9,TRUE
+71,Garissa Police Station,Police Station,-0.4580,39.6600,Garissa,"Garissa","(046) 212-7890","24/7",3.8,TRUE
+72,Garissa Fire Station,Fire Station,-0.4550,39.6570,Garissa,"Garissa","(046) 212-1122","24/7",3.9,TRUE
+73,Mandera County Hospital,Hospital,3.9333,41.8667,Mandera,"Mandera","(046) 212-5678","24/7",3.8,TRUE
+74,Mandera Library,Library,3.9340,41.8670,Mandera,"Mandera","(046) 212-3456","9AM-6PM",3.7,TRUE
+75,Mandera Police Station,Police Station,3.9320,41.8660,Mandera,"Mandera","(046) 212-7890","24/7",3.7,TRUE
+76,Mandera Fire Station,Fire Station,3.9350,41.8680,Mandera,"Mandera","(046) 212-1122","24/7",3.8,TRUE
+77,Wajir County Hospital,Hospital,1.7500,40.0667,Wajir,"Wajir","(046) 212-7890","24/7",3.8,TRUE
+78,Wajir Library,Library,1.7510,40.0670,Wajir,"Wajir","(046) 212-3456","9AM-6PM",3.7,TRUE
+79,Wajir Police Station,Police Station,1.7490,40.0660,Wajir,"Wajir","(046) 212-7890","24/7",3.7,TRUE
+80,Wajir Fire Station,Fire Station,1.7520,40.0680,Wajir,"Wajir","(046) 212-1122","24/7",3.8,TRUE
+81,Marsabit County Hospital,Hospital,2.3333,37.9833,Marsabit,"Marsabit","(069) 212-1234","24/7",3.9,TRUE
+82,Marsabit Library,Library,2.3340,37.9840,Marsabit,"Marsabit","(069) 212-3456","9AM-6PM",3.8,TRUE
+83,Marsabit Police Station,Police Station,2.3320,37.9820,Marsabit,"Marsabit","(069) 212-7890","24/7",3.8,TRUE
+84,Marsabit Fire Station,Fire Station,2.3350,37.9850,Marsabit,"Marsabit","(069) 212-1122","24/7",3.9,TRUE
+85,Kitale County Hospital,Hospital,1.0167,35.0000,Trans Nzoia,"Kitale","(054) 312-1234","24/7",4.0,TRUE
+86,Kitale Library,Library,1.0170,35.0010,Trans Nzoia,"Kitale","(054) 312-3456","9AM-6PM",4.0,TRUE
+87,Kitale Police Station,Police Station,1.0150,34.9990,Trans Nzoia,"Kitale","(054) 312-7890","24/7",3.9,TRUE
+88,Kitale Fire Station,Fire Station,1.0180,35.0020,Trans Nzoia,"Kitale","(054) 312-1122","24/7",4.0,TRUE
+89,Bungoma County Hospital,Hospital,0.5667,34.5667,Bungoma,"Bungoma","(055) 303-1234","24/7",4.0,TRUE
+90,Bungoma Library,Library,0.5670,34.5670,Bungoma,"Bungoma","(055) 303-3456","9AM-6PM",4.0,TRUE
+91,Bungoma Police Station,Police Station,0.5650,34.5650,Bungoma,"Bungoma","(055) 303-7890","24/7",3.9,TRUE
+92,Bungoma Fire Station,Fire Station,0.5680,34.5680,Bungoma,"Bungoma","(055) 303-1122","24/7",4.0,TRUE
+93,Busia County Hospital,Hospital,0.4667,34.1167,Busia,"Busia","(055) 222-1234","24/7",4.0,TRUE
+94,Busia Library,Library,0.4670,34.1170,Busia,"Busia","(055) 222-3456","9AM-6PM",3.9,TRUE
+95,Busia Police Station,Police Station,0.4650,34.1150,Busia,"Busia","(055) 222-7890","24/7",3.9,TRUE
+96,Busia Fire Station,Fire Station,0.4680,34.1180,Busia,"Busia","(055) 222-1122","24/7",4.0,TRUE
+97,Siaya County Hospital,Hospital,0.0667,34.2833,Siaya,"Siaya","(057) 202-5678","24/7",4.0,TRUE
+98,Siaya Library,Library,0.0670,34.2840,Siaya,"Siaya","(057) 202-3456","9AM-6PM",4.0,TRUE
+99,Siaya Police Station,Police Station,0.0650,34.2820,Siaya,"Siaya","(057) 202-7890","24/7",3.9,TRUE
+100,Siaya Fire Station,Fire Station,0.0680,34.2850,Siaya,"Siaya","(057) 202-1122","24/7",4.0,TRUE
+101,Homa Bay County Hospital,Hospital,-0.5167,34.4667,Homa Bay,"Homa Bay","(059) 222-1234","24/7",4.0,TRUE
+102,Homa Bay Library,Library,-0.5170,34.4670,Homa Bay,"Homa Bay","(059) 222-3456","9AM-6PM",3.9,TRUE
+103,Homa Bay Police Station,Police Station,-0.5180,34.4650,Homa Bay,"Homa Bay","(059) 222-7890","24/7",3.9,TRUE
+104,Homa Bay Fire Station,Fire Station,-0.5160,34.4680,Homa Bay,"Homa Bay","(059) 222-1122","24/7",4.0,TRUE
+105,Migori County Hospital,Hospital,-1.0667,34.4667,Migori,"Migori","(059) 212-1234","24/7",4.0,TRUE
+106,Migori Library,Library,-1.0670,34.4670,Migori,"Migori","(059) 212-3456","9AM-6PM",3.9,TRUE
+107,Migori Police Station,Police Station,-1.0680,34.4650,Migori,"Migori","(059) 212-7890","24/7",3.9,TRUE
+108,Migori Fire Station,Fire Station,-1.0660,34.4680,Migori,"Migori","(059) 212-1122","24/7",4.0,TRUE
+109,Kitui County Hospital,Hospital,-1.3667,38.0167,Kitui,"Kitui","(044) 222-1234","24/7",4.0,TRUE
+110,South Eastern Kenya University,School,-1.4833,37.4333,Kitui,"Kitui","(044) 212-7890","8AM-5PM",4.0,TRUE
+111,Kitui Library,Library,-1.3670,38.0170,Kitui,"Kitui","(044) 222-3456","9AM-6PM",4.0,TRUE
+112,Kitui Police Station,Police Station,-1.3680,38.0150,Kitui,"Kitui","(044) 222-7890","24/7",3.9,TRUE
+113,Kitui Fire Station,Fire Station,-1.3660,38.0180,Kitui,"Kitui","(044) 222-1122","24/7",4.0,TRUE
+114,Makueni County Hospital,Hospital,-1.8000,37.6167,Makueni,"Makueni","(044) 232-1234","24/7",4.0,TRUE
+115,Makueni Library,Library,-1.8010,37.6170,Makueni,"Makueni","(044) 232-3456","9AM-6PM",3.9,TRUE
+116,Makueni Police Station,Police Station,-1.8020,37.6150,Makueni,"Makueni","(044) 232-7890","24/7",3.9,TRUE
+117,Makueni Fire Station,Fire Station,-1.7990,37.6180,Makueni,"Makueni","(044) 232-1122","24/7",4.0,TRUE
+118,Kwale County Hospital,Hospital,-4.1833,39.4500,Kwale,"Kwale","(040) 212-1234","24/7",4.0,TRUE
+119,Kwale Library,Library,-4.1840,39.4510,Kwale,"Kwale","(040) 212-3456","9AM-6PM",3.9,TRUE
+120,Kwale Police Station,Police Station,-4.1850,39.4490,Kwale,"Kwale","(040) 212-7890","24/7",3.9,TRUE
+121,Kwale Fire Station,Fire Station,-4.1820,39.4520,Kwale,"Kwale","(040) 212-1122","24/7",4.0,TRUE
+122,Kilifi County Hospital,Hospital,-3.6333,39.8500,Kilifi,"Kilifi","(041) 522-1234","24/7",4.0,TRUE
+123,Pwani University,School,-3.6340,39.8510,Kilifi,"Kilifi","(041) 522-5678","8AM-5PM",4.1,TRUE
+124,Kilifi Library,Library,-3.6320,39.8490,Kilifi,"Kilifi","(041) 522-3456","9AM-6PM",4.0,TRUE
+125,Kilifi Police Station,Police Station,-3.6350,39.8520,Kilifi,"Kilifi","(041) 522-7890","24/7",3.9,TRUE
+126,Kilifi Fire Station,Fire Station,-3.6310,39.8480,Kilifi,"Kilifi","(041) 522-1122","24/7",4.0,TRUE
+127,Tana River County Hospital,Hospital,-2.2833,40.1500,Tana River,"Hola","(046) 232-1234","24/7",3.8,TRUE
+128,Tana River Library,Library,-2.2840,40.1510,Tana River,"Hola","(046) 232-3456","9AM-6PM",3.8,TRUE
+129,Tana River Police Station,Police Station,-2.2850,40.1490,Tana River,"Hola","(046) 232-7890","24/7",3.7,TRUE
+130,Tana River Fire Station,Fire Station,-2.2820,40.1520,Tana River,"Hola","(046) 232-1122","24/7",3.8,TRUE
+131,Lamu County Hospital,Hospital,-2.2667,40.9000,Lamu,"Lamu","(042) 633-1234","24/7",3.9,TRUE
+132,Lamu Library,Library,-2.2670,40.9010,Lamu,"Lamu","(042) 633-3456","9AM-6PM",3.9,TRUE
+133,Lamu Police Station,Police Station,-2.2680,40.8990,Lamu,"Lamu","(042) 633-7890","24/7",3.8,TRUE
+134,Lamu Fire Station,Fire Station,-2.2660,40.9020,Lamu,"Lamu","(042) 633-1122","24/7",3.9,TRUE
+135,Taita Taveta County Hospital,Hospital,-3.4167,38.3333,Taita Taveta,"Wundanyi","(043) 222-1234","24/7",4.0,TRUE
+136,Taita Taveta Library,Library,-3.4170,38.3340,Taita Taveta,"Wundanyi","(043) 222-3456","9AM-6PM",3.9,TRUE
+137,Taita Taveta Police Station,Police Station,-3.4180,38.3320,Taita Taveta,"Wundanyi","(043) 222-7890","24/7",3.9,TRUE
+138,Taita Taveta Fire Station,Fire Station,-3.4160,38.3350,Taita Taveta,"Wundanyi","(043) 222-1122","24/7",4.0,TRUE
+139,Kajiado County Hospital,Hospital,-1.8500,36.7833,Kajiado,"Kajiado","(045) 222-1234","24/7",4.0,TRUE
+140,Kajiado Library,Library,-1.8510,36.7840,Kajiado,"Kajiado","(045) 222-3456","9AM-6PM",3.9,TRUE
+141,Kajiado Police Station,Police Station,-1.8520,36.7820,Kajiado,"Kajiado","(045) 222-7890","24/7",3.9,TRUE
+142,Kajiado Fire Station,Fire Station,-1.8490,36.7850,Kajiado,"Kajiado","(045) 222-1122","24/7",4.0,TRUE
+143,Narok County Hospital,Hospital,-1.0833,35.8667,Narok,"Narok","(050) 222-1234","24/7",4.0,TRUE
+144,Maasai Mara University,School,-1.0840,35.8670,Narok,"Narok","(050) 222-5678","8AM-5PM",4.1,TRUE
+145,Narok Library,Library,-1.0820,35.8650,Narok,"Narok","(050) 222-3456","9AM-6PM",3.9,TRUE
+146,Narok Police Station,Police Station,-1.0850,35.8680,Narok,"Narok","(050) 222-7890","24/7",3.9,TRUE
+147,Narok Fire Station,Fire Station,-1.0810,35.8640,Narok,"Narok","(050) 222-1122","24/7",4.0,TRUE
+148,Laikipia County Hospital,Hospital,0.0833,36.8667,Laikipia,"Rumuruti","(062) 222-1234","24/7",4.0,TRUE
+149,Laikipia University,School,0.0167,36.8667,Laikipia,"Nyandarua","(062) 212-3456","8AM-5PM",4.0,TRUE
+150,Laikipia Library,Library,0.0840,36.8670,Laikipia,"Rumuruti","(062) 222-3456","9AM-6PM",3.9,TRUE
+151,Laikipia Police Station,Police Station,0.0820,36.8650,Laikipia,"Rumuruti","(062) 222-7890","24/7",3.9,TRUE
+152,Laikipia Fire Station,Fire Station,0.0850,36.8680,Laikipia,"Rumuruti","(062) 222-1122","24/7",4.0,TRUE
+153,Nyandarua County Hospital,Hospital,-0.3000,36.5333,Nyandarua,"Ol Kalou","(062) 222-1234","24/7",4.0,TRUE
+154,Nyandarua Library,Library,-0.3010,36.5340,Nyandarua,"Ol Kalou","(062) 222-3456","9AM-6PM",3.9,TRUE
+155,Nyandarua Police Station,Police Station,-0.3020,36.5320,Nyandarua,"Ol Kalou","(062) 222-7890","24/7",3.9,TRUE
+156,Nyandarua Fire Station,Fire Station,-0.2990,36.5350,Nyandarua,"Ol Kalou","(062) 222-1122","24/7",4.0,TRUE
+157,Kiambu County Hospital,Hospital,-1.1667,36.8333,Kiambu,"Kiambu","(067) 222-1234","24/7",4.1,TRUE
+158,Jomo Kenyatta University,School,-1.1333,37.0167,Kiambu,"Juja","(067) 212-1234","8AM-5PM",4.3,TRUE
+159,Kiambu Library,Library,-1.1670,36.8340,Kiambu,"Kiambu","(067) 222-3456","9AM-6PM",4.0,TRUE
+160,Kiambu Police Station,Police Station,-1.1680,36.8320,Kiambu,"Kiambu","(067) 222-7890","24/7",4.0,TRUE
+161,Kiambu Fire Station,Fire Station,-1.1660,36.8350,Kiambu,"Kiambu","(067) 222-1122","24/7",4.1,TRUE
+162,Thika Level 5 Hospital,Hospital,-1.0333,37.0833,Kiambu,"Thika","(067) 222-5678","24/7",4.2,TRUE
+163,Kirinyaga County Hospital,Hospital,-0.5000,37.2833,Kirinyaga,"Kerugoya","(060) 222-1234","24/7",4.0,TRUE
+164,Kirinyaga Library,Library,-0.5010,37.2840,Kirinyaga,"Kerugoya","(060) 222-3456","9AM-6PM",4.0,TRUE
+165,Kirinyaga Police Station,Police Station,-0.5020,37.2820,Kirinyaga,"Kerugoya","(060) 222-7890","24/7",3.9,TRUE
+166,Kirinyaga Fire Station,Fire Station,-0.4990,37.2850,Kirinyaga,"Kerugoya","(060) 222-1122","24/7",4.0,TRUE
+167,Tharaka Nithi County Hospital,Hospital,-0.3333,37.6500,Tharaka Nithi,"Chuka","(060) 222-5678","24/7",4.0,TRUE
+168,Chuka University,School,-0.3333,37.6500,Tharaka Nithi,"Chuka","(020) 212-3456","8AM-5PM",4.0,TRUE
+169,Tharaka Nithi Library,Library,-0.3340,37.6510,Tharaka Nithi,"Chuka","(060) 222-3456","9AM-6PM",3.9,TRUE
+170,Tharaka Nithi Police Station,Police Station,-0.3350,37.6490,Tharaka Nithi,"Chuka","(060) 222-7890","24/7",3.9,TRUE
+171,Tharaka Nithi Fire Station,Fire Station,-0.3320,37.6520,Tharaka Nithi,"Chuka","(060) 222-1122","24/7",4.0,TRUE
+172,Nandi County Hospital,Hospital,0.1667,35.1333,Nandi,"Kapsabet","(053) 222-1234","24/7",4.0,TRUE
+173,Nandi Library,Library,0.1670,35.1340,Nandi,"Kapsabet","(053) 222-3456","9AM-6PM",4.0,TRUE
+174,Nandi Police Station,Police Station,0.1650,35.1320,Nandi,"Kapsabet","(053) 222-7890","24/7",3.9,TRUE
+175,Nandi Fire Station,Fire Station,0.1680,35.1350,Nandi,"Kapsabet","(053) 222-1122","24/7",4.0,TRUE
+176,Bomet County Hospital,Hospital,-0.7833,35.3500,Bomet,"Bomet","(052) 222-1234","24/7",4.0,TRUE
+177,Bomet Library,Library,-0.7840,35.3510,Bomet,"Bomet","(052) 222-3456","9AM-6PM",3.9,TRUE
+178,Bomet Police Station,Police Station,-0.7850,35.3490,Bomet,"Bomet","(052) 222-7890","24/7",3.9,TRUE
+179,Bomet Fire Station,Fire Station,-0.7820,35.3520,Bomet,"Bomet","(052) 222-1122","24/7",4.0,TRUE
+180,Baringo County Hospital,Hospital,0.4667,35.9667,Baringo,"Kabarnet","(053) 222-5678","24/7",4.0,TRUE
+181,Baringo Library,Library,0.4670,35.9670,Baringo,"Kabarnet","(053) 222-3456","9AM-6PM",3.9,TRUE
+182,Baringo Police Station,Police Station,0.4650,35.9650,Baringo,"Kabarnet","(053) 222-7890","24/7",3.9,TRUE
+183,Baringo Fire Station,Fire Station,0.4680,35.9680,Baringo,"Kabarnet","(053) 222-1122","24/7",4.0,TRUE
+184,Turkana County Hospital,Hospital,3.1167,35.6000,Turkana,"Lodwar","(054) 222-1234","24/7",3.8,TRUE
+185,Turkana University,School,3.1170,35.6010,Turkana,"Lodwar","(054) 222-5678","8AM-5PM",3.8,TRUE
+186,Turkana Library,Library,3.1150,35.5990,Turkana,"Lodwar","(054) 222-3456","9AM-6PM",3.7,TRUE
+187,Turkana Police Station,Police Station,3.1180,35.6020,Turkana,"Lodwar","(054) 222-7890","24/7",3.7,TRUE
+188,Turkana Fire Station,Fire Station,3.1140,35.5980,Turkana,"Lodwar","(054) 222-1122","24/7",3.8,TRUE
+189,West Pokot County Hospital,Hospital,1.2333,35.1167,West Pokot,"Kapenguria","(054) 222-1234","24/7",3.9,TRUE
+190,West Pokot Library,Library,1.2340,35.1170,West Pokot,"Kapenguria","(054) 222-3456","9AM-6PM",3.8,TRUE
+191,West Pokot Police Station,Police Station,1.2320,35.1150,West Pokot,"Kapenguria","(054) 222-7890","24/7",3.8,TRUE
+192,West Pokot Fire Station,Fire Station,1.2350,35.1180,West Pokot,"Kapenguria","(054) 222-1122","24/7",3.9,TRUE
+193,Samburu County Hospital,Hospital,1.0667,37.5833,Samburu,"Maralal","(064) 222-1234","24/7",3.8,TRUE
+194,Samburu Library,Library,1.0670,37.5840,Samburu,"Maralal","(064) 222-3456","9AM-6PM",3.8,TRUE
+195,Samburu Police Station,Police Station,1.0650,37.5820,Samburu,"Maralal","(064) 222-7890","24/7",3.7,TRUE
+196,Samburu Fire Station,Fire Station,1.0680,37.5850,Samburu,"Maralal","(064) 222-1122","24/7",3.8,TRUE
+197,Isiolo County Hospital,Hospital,0.3500,37.5833,Isiolo,"Isiolo","(064) 222-5678","24/7",3.9,TRUE
+198,Isiolo Library,Library,0.3510,37.5840,Isiolo,"Isiolo","(064) 222-3456","9AM-6PM",3.8,TRUE
+199,Isiolo Police Station,Police Station,0.3490,37.5820,Isiolo,"Isiolo","(064) 222-7890","24/7",3.8,TRUE
+200,Isiolo Fire Station,Fire Station,0.3520,37.5850,Isiolo,"Isiolo","(064) 222-1122","24/7",3.9,TRUE
+201,Marsabit County Hospital,Hospital,2.3333,37.9833,Marsabit,"Marsabit","(069) 212-1234","24/7",3.9,TRUE
+202,Marsabit Library,Library,2.3340,37.9840,Marsabit,"Marsabit","(069) 212-3456","9AM-6PM",3.8,TRUE
+203,Marsabit Police Station,Police Station,2.3320,37.9820,Marsabit,"Marsabit","(069) 212-7890","24/7",3.8,TRUE
+204,Marsabit Fire Station,Fire Station,2.3350,37.9850,Marsabit,"Marsabit","(069) 212-1122","24/7",3.9,TRUE
+205,Vihiga County Hospital,Hospital,0.0500,34.7167,Vihiga,"Vihiga","(056) 222-1234","24/7",4.0,TRUE
+206,Vihiga Library,Library,0.0510,34.7170,Vihiga,"Vihiga","(056) 222-3456","9AM-6PM",3.9,TRUE
+207,Vihiga Police Station,Police Station,0.0490,34.7150,Vihiga,"Vihiga","(056) 222-7890","24/7",3.9,TRUE
+208,Vihiga Fire Station,Fire Station,0.0520,34.7180,Vihiga,"Vihiga","(056) 222-1122","24/7",4.0,TRUE
+209,Nyamira County Hospital,Hospital,-0.7500,34.9333,Nyamira,"Nyamira","(058) 222-1234","24/7",4.0,TRUE
+210,Nyamira Library,Library,-0.7510,34.9340,Nyamira,"Nyamira","(058) 222-3456","9AM-6PM",3.9,TRUE
+211,Nyamira Police Station,Police Station,-0.7520,34.9320,Nyamira,"Nyamira","(058) 222-7890","24/7",3.9,TRUE
+212,Nyamira Fire Station,Fire Station,-0.7490,34.9350,Nyamira,"Nyamira","(058) 222-1122","24/7",4.0,TRUE
+213,Elgeyo Marakwet County Hospital,Hospital,0.5167,35.5000,Elgeyo Marakwet,"Iten","(053) 222-1234","24/7",4.0,TRUE
+214,Elgeyo Marakwet Library,Library,0.5170,35.5010,Elgeyo Marakwet,"Iten","(053) 222-3456","9AM-6PM",3.9,TRUE
+215,Elgeyo Marakwet Police Station,Police Station,0.5150,35.4990,Elgeyo Marakwet,"Iten","(053) 222-7890","24/7",3.9,TRUE
+216,Elgeyo Marakwet Fire Station,Fire Station,0.5180,35.5020,Elgeyo Marakwet,"Iten","(053) 222-1122","24/7",4.0,TRUE

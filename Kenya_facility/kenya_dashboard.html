@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kenya Facilities Map</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Marker Cluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <!-- Leaflet Routing Machine -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <!-- Leaflet Heatmap -->
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    
+    <!-- External CSS and JavaScript -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Split JavaScript files for better performance -->
+    <script src="script-map.js"></script>
+    <script src="script-data.js"></script>
+    <script src="script-search.js"></script>
+    <script src="script-utils.js"></script>
+    <script src="script-main.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">
+            <i class="fas fa-map-marked-alt"></i>
+            <span>Kenya Facilities Map</span>
+        </div>
+        
+        <div class="search-container">
+            <input type="text" class="search-box" id="searchBox" placeholder="Search facilities...">
+            <i class="fas fa-search search-icon"></i>
+        </div>
+        
+        <div class="header-buttons">
+            <button class="header-btn active" id="mapViewBtn">
+                <i class="fas fa-map"></i>
+                Map
+            </button>
+            <button class="header-btn" id="gpsViewBtn">
+                <i class="fas fa-location-arrow"></i>
+                GPS
+            </button>
+            <button class="header-btn" id="satelliteViewBtn">
+                <i class="fas fa-satellite"></i>
+                Satellite
+            </button>
+            <button class="header-btn" id="terrainViewBtn">
+                <i class="fas fa-mountain"></i>
+                Terrain
+            </button>
+            <button class="header-btn" id="hybridViewBtn">
+                <i class="fas fa-layer-group"></i>
+                Hybrid
+            </button>
+            <button class="header-btn" id="heatmapBtn">
+                <i class="fas fa-fire"></i>
+                Heatmap
+            </button>
+            <span style="color: #5f6368; font-size: 16px; font-weight: 700; margin-left: 15px; display: flex; align-items: center; font-family: 'Roboto', Arial, sans-serif; animation: pulse 2s infinite;">
+                <i class="fas fa-location-crosshairs" style="margin-right: 8px; color: #4285F4; animation: rotate 3s linear infinite;"></i>
+                Find Nearest Facility Around You
+            </span>
+        </div>
+    </div>
+    
+    <!-- Map -->
+    <div id="map"></div>
+    
+    <!-- Toggle Sidebar Button -->
+    <button class="toggle-sidebar" id="toggleSidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- Moving Car -->
+    <div class="moving-car" id="movingCar" style="display: none;">
+        <div style="width: 30px; height: 20px; background: #4285F4; border: 2px solid white; border-radius: 4px; position: relative;">
+            <div style="position: absolute; top: 2px; left: 2px; width: 8px; height: 6px; background: white; border-radius: 2px;">
+                <div style="position: absolute; top: 1px; left: 2px; width: 4px; height: 4px; background: #333; border-radius: 1px;"></div>
+            </div>
+            <div style="position: absolute; top: 2px; right: 2px; width: 6px; height: 6px; background: #FF4444; border-radius: 1px;"></div>
+        </div>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-title">Facilities</div>
+            <select class="county-select" id="countySelect">
+                <option value="all">All Counties</option>
+            </select>
+            <select class="facility-type-select" id="facilityTypeSelect">
+                <option value="all">All Types</option>
+                <option value="health">Health Facilities</option>
+                <option value="education">Education</option>
+                <option value="church">Churches</option>
+                <option value="financial">Financial</option>
+                <option value="poi">Points of Interest</option>
+                <option value="transport">Airport</option>
+            </select>
+            <input type="text" class="county-search" id="countySearch" placeholder="Search county...">
+        </div>
+        <div class="facility-list" id="facilityList">
+            <!-- Facilities will be populated here -->
+        </div>
+    </div>
+    
+    <!-- Map Controls -->
+    <div class="map-controls">
+        <button class="map-control-btn" id="zoomInBtn" title="Zoom In">
+            <i class="fas fa-plus"></i>
+        </button>
+        <button class="map-control-btn" id="zoomOutBtn" title="Zoom Out">
+            <i class="fas fa-minus"></i>
+        </button>
+        <button class="map-control-btn" id="locateBtn" title="My Location">
+            <i class="fas fa-crosshairs"></i>
+        </button>
+        <button class="map-control-btn" id="fullscreenBtn" title="Fullscreen">
+            <i class="fas fa-expand"></i>
+        </button>
+    </div>
+    
+    <!-- Directions Panel (FIX #3 - Added missing panel) -->
+    <div class="directions-panel" id="directionsPanel">
+        <div class="directions-header">
+            <div class="directions-title">Directions</div>
+            <div class="directions-actions">
+                <button class="hide-directions" id="hideDirectionsBtn" title="Hide Panel (Keep Route)">
+                    <i class="fas fa-eye-slash"></i>
+                </button>
+                <button class="close-directions" id="closeDirectionsBtn" title="Close (Remove Route)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+        <div class="directions-content">
+            <div class="directions-route" id="directionsRoute">
+                <div class="route-info">
+                    <div class="route-distance">0 km</div>
+                    <div class="route-time">0 min</div>
+                </div>
+                <div class="start-location">
+                    <input type="text" class="location-input" id="startLocationInput" placeholder="Enter start location or use 'My Location'">
+                    <button class="get-directions-btn" id="useMyLocationBtn">
+                        <i class="fas fa-crosshairs"></i> Use My Location
+                    </button>
+                </div>
+                <div class="direction-step">
+                    <div class="step-icon"><i class="fas fa-circle"></i></div>
+                    <div>
+                        <div class="step-text">Select a facility to get directions</div>
+                        <div class="step-distance"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Search Results (FIX #4 - Added search results panel) -->
+    <div class="search-results" id="searchResults"></div>
+    
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">Loading facilities...</div>
+    </div>
+    
+    <!-- Sample Data Notice (FIX #1 - Shows when using sample data) -->
+    <div id="sampleDataNotice" class="sample-data-notice">
+        <i class="fas fa-info-circle"></i> Using sample data - GeoJSON files not found
+    </div>
+
+</body>
+</html>
