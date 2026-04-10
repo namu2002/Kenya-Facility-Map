@@ -254,6 +254,11 @@ function initializeLayerControls() {
         // Add to active layers
         activeLayers.add(category);
     });
+    
+    // Hide loading spinner after initialization
+    if (typeof hideLoading === 'function') {
+        hideLoading();
+    }
 }
 
 // Toggle layer visibility

@@ -483,5 +483,13 @@ window.addEventListener('load', () => {
     console.log(`Application loaded in ${loadTime.toFixed(2)}ms`);
 });
 
+// Hide loading spinner
+function hideLoading() {
+    const loadingElement = document.getElementById('loading');
+    if (loadingElement) {
+        loadingElement.style.display = 'none';
+    }
+}
+
 // Export app state for debugging
 window.appState = app;
