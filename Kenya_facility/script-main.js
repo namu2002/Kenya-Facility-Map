@@ -15,10 +15,17 @@ const app = {
 // Initialize application when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Initializing Kenya Facilities Map...');
+    console.log('Checking available functions:');
+    console.log('- initMap:', typeof initMap);
+    console.log('- initSearch:', typeof initSearch);
+    console.log('- initializeComponents:', typeof initializeComponents);
     
     // Initialize map first
     if (typeof initMap === 'function') {
+        console.log('Calling initMap...');
         initMap();
+    } else {
+        console.error('initMap function not found!');
     }
     
     // Initialize other components
