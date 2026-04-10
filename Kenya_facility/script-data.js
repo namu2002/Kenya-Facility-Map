@@ -104,13 +104,14 @@ function getCategoryFromSource(source) {
 // Create facility layer on map
 function createFacilityLayer(facilities, source) {
     const category = getCategoryFromSource(source);
-    const markers = facilities.map(facility => createFacilityMarker(facility));
+    const facilityMarkers = facilities.map(facility => createFacilityMarker(facility));
     
-    const layerGroup = L.layerGroup(markers);
+    const layerGroup = L.layerGroup(facilityMarkers);
     facilityLayers[category] = layerGroup;
     
     // Add to marker cluster
-    markers.forEach(marker => markerCluster.addLayer(marker));
+    facilityMarkers.forEach(marker => markerCluster.addLayer(marker));
+    console.log(`Added ${facilityMarkers.length} markers to ${category} layer`);
 }
 
 // Create individual facility marker
@@ -255,51 +256,10 @@ function initializeLayerControls() {
         activeLayers.add(category);
     });
     
-    // Add test markers to ensure something shows
-    addTestMarkers();
-    
     // Hide loading spinner after initialization
     if (typeof hideLoading === 'function') {
         hideLoading();
     }
-}
-
-// Add test markers to verify map is working
-function addTestMarkers() {
-    if (!map) return;
-    
-    console.log('Adding test markers...');
-    
-    const testFacilities = [
-        {
-            id: 'test1',
-            name: 'Nairobi Test',
-            type: 'test',
-            category: 'Test',
-            lat: -1.2921,
-            lng: 36.8219,
-            address: 'Test marker for debugging'
-        },
-        {
-            id: 'test2',
-            name: 'Mombasa Test',
-            type: 'test',
-            category: 'Test',
-            lat: -4.0635,
-            lng: 39.6581,
-            address: 'Another test marker'
-        }
-    ];
-    
-    testFacilities.forEach(facility => {
-        const marker = createFacilityMarker(facility);
-        if (marker) {
-            markerCluster.addLayer(marker);
-            console.log('Added test marker:', facility.name);
-        }
-    });
-    
-    console.log('Test markers added:', testFacilities.length);
 }
 
 // Toggle layer visibility
