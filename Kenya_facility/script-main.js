@@ -25,6 +25,12 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         initializeComponents();
         app.initialized = true;
+        
+        // Hide loading spinner immediately
+        if (typeof hideLoading === 'function') {
+            hideLoading();
+        }
+        
         showNotification('Kenya Facilities Map loaded successfully', 'success');
     }, 1000);
 });

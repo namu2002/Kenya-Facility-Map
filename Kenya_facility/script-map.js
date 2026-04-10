@@ -56,6 +56,13 @@ function initMap() {
     map.on('click', onMapClick);
     map.on('locationfound', onLocationFound);
     map.on('locationerror', onLocationError);
+
+    // Hide loading spinner after map is ready
+    setTimeout(() => {
+        if (typeof hideLoading === 'function') {
+            hideLoading();
+        }
+    }, 2000);
 }
 
 // Map click handler
