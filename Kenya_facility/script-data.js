@@ -33,15 +33,30 @@ function loadAllFacilities() {
 
 // Load GeoJSON data
 function loadGeoJSON(filename, callback) {
-    fetch(filename)
+    // Create timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout')), 30000); // 30 second timeout
+    });
+
+    // Create fetch promise
+    const fetchPromise = fetch(filename)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             return response.json();
+        });
+
+    // Race between fetch and timeout
+    Promise.race([fetchPromise, timeoutPromise])
+        .then(data => {
+            console.log(`Loaded ${filename} successfully`);
+            callback(null, data);
         })
-        .then(data => callback(null, data))
-        .catch(error => callback(error, null));
+        .catch(error => {
+            console.error(`Error loading ${filename}:`, error);
+            callback(error, null);
+        });
 }
 
 // Process facility data from GeoJSON
@@ -164,7 +179,12 @@ function createPopupContent(facility) {
 // Load CSV data
 function loadCSVData() {
     fetch('kenya_facilities.csv')
-        .then(response => response.text())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.text();
+        })
         .then(csvText => {
             const facilities = parseCSV(csvText);
             window.allFacilities = window.allFacilities || [];
@@ -172,8 +192,12 @@ function loadCSVData() {
             
             // Create layer for CSV facilities
             createFacilityLayer(facilities, 'CSV Data');
+            console.log('CSV data loaded successfully');
         })
-        .catch(error => console.error('Error loading CSV:', error));
+        .catch(error => {
+            console.error('Error loading CSV:', error);
+            showNotification('Error loading facility data', 'error');
+        });
 }
 
 // Parse CSV data
