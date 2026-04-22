@@ -29,12 +29,8 @@
     <!-- External CSS and JavaScript -->
     <link rel="stylesheet" href="styles.css">
     
-    <!-- Split JavaScript files for better performance -->
-    <script src="script-map.js"></script>
-    <script src="script-data.js"></script>
-    <script src="script-search.js"></script>
-    <script src="script-utils.js"></script>
-    <script src="script-main.js"></script>
+    <!-- Main JavaScript -->
+    <script src="script.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -102,19 +98,31 @@
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="sidebar-title">Facilities</div>
-            <select class="county-select" id="countySelect">
-                <option value="all">All Counties</option>
-            </select>
-            <select class="facility-type-select" id="facilityTypeSelect">
-                <option value="all">All Types</option>
-                <option value="health">Health Facilities</option>
-                <option value="education">Education</option>
-                <option value="church">Churches</option>
-                <option value="financial">Financial</option>
-                <option value="poi">Points of Interest</option>
-                <option value="transport">Airport</option>
-            </select>
+            <div class="sidebar-title">Facilities <span id="facilityCountBadge" style="font-size: 14px; background: #4285F4; color: white; padding: 2px 8px; border-radius: 12px; margin-left: 8px; vertical-align: middle;">0</span></div>
+            <div class="filter-controls">
+                <select class="county-select" id="countySelect">
+                    <option value="all">All Counties</option>
+                </select>
+                <select class="facility-type-select" id="facilityTypeSelect">
+                    <option value="all">All Types</option>
+                    <option value="health">Health Facilities</option>
+                    <option value="education">Education</option>
+                    <option value="church">Churches</option>
+                    <option value="financial">Banks & Financial</option>
+                    <option value="hotel">Hotels & Lodges</option>
+                    <option value="restaurant">Restaurants</option>
+                    <option value="police">Police Stations</option>
+                    <option value="fire">Fire Stations</option>
+                    <option value="library">Libraries</option>
+                    <option value="park">Parks</option>
+                    <option value="market">Markets</option>
+                    <option value="transport">Airports</option>
+                    <option value="poi">Other POI</option>
+                </select>
+                <button class="clear-filters-btn" id="clearFiltersBtn" title="Clear all filters">
+                    <i class="fas fa-times"></i> Clear
+                </button>
+            </div>
             <input type="text" class="county-search" id="countySearch" placeholder="Search county...">
         </div>
         <div class="facility-list" id="facilityList">

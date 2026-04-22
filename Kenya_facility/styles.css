@@ -323,6 +323,47 @@ body {
     box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
 }
 
+.filter-controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+
+.filter-controls .county-select,
+.filter-controls .facility-type-select {
+    flex: 1;
+    margin-bottom: 0;
+    min-width: 0;
+}
+
+.clear-filters-btn {
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    color: #5f6368;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.clear-filters-btn:hover {
+    background: #e8f0fe;
+    border-color: #4285F4;
+    color: #4285F4;
+}
+
+.clear-filters-btn:active {
+    background: #d2e3fc;
+    transform: translateY(1px);
+}
+
 .county-search {
     width: 100%;
     padding: 8px 12px;

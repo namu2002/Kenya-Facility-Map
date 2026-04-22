@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kenya Interactive Facilities Map</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Marker Cluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        #map {
+            height: 100vh;
+            width: 100%;
+            z-index: 1;
+        }
+        
+        .control-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 20px;
+            z-index: 1000;
+            min-width: 280px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .control-panel h3 {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .filter-section {
+            margin-bottom: 20px;
+        }
+        
+        .filter-section label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        .filter-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-btn {
+            padding: 10px 15px;
+            border: 2px solid #e1e8ed;
+            background: #f8f9fa;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        .filter-btn:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+        
+        .filter-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #0056b3;
+        }
+        
+        .show-all-btn {
+            grid-column: span 2;
+            background: #28a745;
+            color: white;
+            border-color: #1e7e34;
+        }
+        
+        .show-all-btn:hover {
+            background: #218838;
+        }
+        
+        .stats {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.95);
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 2000;
+            font-size: 16px;
+        }
+        
+        .cluster-icon {
+            background: #4285f4;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+            line-height: 30px;
+            width: 30px;
+            height: 30px;
+        }
+        
+        .facility-popup {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .facility-popup h4 {
+            margin: 0 0 8px 0;
+            color: #2c3e50;
+        }
+        
+        .facility-popup p {
+            margin: 4px 0;
+            color: #555;
+        }
+        
+        .zoom-info {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #666;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <div class="control-panel">
+        <h3>🇰🇪 Kenya Facilities</h3>
+        
+        <div class="filter-section">
+            <label>Filter by County:</label>
+            <select id="countyFilter" style="width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                <option value="all">🗺️ All Counties</option>
+            </select>
+        </div>
+        
+        <div class="filter-section">
+            <label>🔍 Search Facilities:</label>
+            <input type="text" id="searchInput" placeholder="Type facility name..." style="width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+        </div>
+        
+        <div class="filter-section">
+            <label>Filter by County:</label>
+                <button class="filter-btn" data-type="hospital">🏥 Hospitals</button>
+                <button class="filter-btn" data-type="clinic">🏥 Clinics</button>
+                <button class="filter-btn" data-type="pharmacy">💊 Pharmacies</button>
+                <button class="filter-btn" data-type="school">🎓 Schools</button>
+                <button class="filter-btn" data-type="university">🎓 Universities</button>
+                <button class="filter-btn" data-type="college">🎓 Colleges</button>
+                <button class="filter-btn" data-type="bank">🏦 Banks</button>
+                <button class="filter-btn" data-type="airport">✈️ Airports</button>
+            </div>
+        </div>
+        
+        <div class="stats" id="stats">
+            Loading facilities...
+        </div>
+    </div>
+    
+    <div class="zoom-info" id="zoomInfo">
+        Zoom: <span id="zoomLevel">10</span> | 
+        Visible: <span id="visibleCount">0</span> facilities
+    </div>
+    
+    <div class="loading" id="loading" style="display: none;">
+        Loading Kenya facilities...
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Marker Cluster JS -->
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    
+    <script>
+        // Global variables
+        let map;
+        let allFacilities = [];
+        let facilityLayer;
+        let markerClusterGroup;
+        let currentTypeFilter = 'all';
+        let currentCountyFilter = 'all';
+        let currentSearchTerm = '';
+        let isLoading = false;
+        
+        // Initialize map
+        function initMap() {
+            // Create map centered on Kenya
+            map = L.map('map').setView([-1.2864, 36.8172], 7);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 18
+            }).addTo(map);
+            
+            // Initialize marker cluster group
+            markerClusterGroup = L.markerClusterGroup({
+                chunkedLoading: true,
+                spiderfyOnMaxZoom: true,
+                showCoverageOnHover: true,
+                maxClusterRadius: 80,
+                spiderfyDistanceMultiplier: 2
+            });
+            
+            // Add cluster group to map
+            map.addLayer(markerClusterGroup);
+            
+            // Load facilities
+            loadFacilities();
+            
+            // Update zoom info
+            map.on('zoomend moveend', updateZoomInfo);
+            updateZoomInfo();
+        }
+        
+        // Load facilities from GeoJSON
+        async function loadFacilities() {
+            try {
+                showLoading(true);
+                
+                const response = await fetch('data/kenya_facilities_combined.geojson');
+                const data = await response.json();
+                
+                allFacilities = data.features;
+                console.log(`Loaded ${allFacilities.length} Kenya facilities`);
+                
+                // Extract unique counties and populate dropdown
+                const counties = new Set();
+                allFacilities.forEach(f => {
+                    if (f.properties['addr:city']) {
+                        counties.add(f.properties['addr:city']);
+                    }
+                });
+                
+                const countySelect = document.getElementById('countyFilter');
+                const sortedCounties = Array.from(counties).sort();
+                sortedCounties.forEach(county => {
+                    const option = document.createElement('option');
+                    option.value = county;
+                    option.textContent = county;
+                    countySelect.appendChild(option);
+                });
+                
+                console.log(`Found ${counties.size} unique counties`);
+                
+                // Initial display
+                displayFacilities('all', 'all', null);
+                
+                updateStats();
+                showLoading(false);
+                
+            } catch (error) {
+                console.error('Error loading facilities:', error);
+                showLoading(false);
+                document.getElementById('stats').innerHTML = '❌ Error loading facilities';
+            }
+        }
+        
+        // Display facilities based on county, type, and search filters
+        function displayFacilities(typeFilter = null, countyFilter = null, searchTerm = null) {
+            // Fix: properly handle all values including 'all' and empty string
+            currentTypeFilter = typeFilter !== null ? typeFilter : currentTypeFilter;
+            currentCountyFilter = countyFilter !== null ? countyFilter : currentCountyFilter;
+            currentSearchTerm = searchTerm !== null ? searchTerm : currentSearchTerm;
+            
+            // Clear existing markers
+            markerClusterGroup.clearLayers();
+            
+            // Filter facilities by county first, then by type, then by search
+            let filteredFacilities = allFacilities;
+            
+            // County filtering
+            console.log('County filter value:', currentCountyFilter);
+            if (currentCountyFilter !== 'all') {
+                filteredFacilities = filteredFacilities.filter(facility => {
+                    const city = facility.properties['addr:city'];
+                    const match = city && city.toLowerCase() === currentCountyFilter.toLowerCase();
+                    return match;
+                });
+                console.log('After county filter:', filteredFacilities.length, 'facilities');
+            }
+            
+            // Type filtering
+            if (currentTypeFilter !== 'all') {
+                filteredFacilities = filteredFacilities.filter(facility => 
+                    facility.properties.type === currentTypeFilter
+                );
+            }
+            
+            // Search filtering
+            if (currentSearchTerm && currentSearchTerm.trim() !== '') {
+                filteredFacilities = filteredFacilities.filter(facility => 
+                    facility.properties.name.toLowerCase().includes(currentSearchTerm.toLowerCase())
+                );
+            }
+            
+            // Check zoom level for performance
+            const currentZoom = map.getZoom();
+            const shouldDisplayAll = currentZoom >= 10;
+            
+            // Limit display for performance when zoomed out
+            let facilitiesToDisplay = filteredFacilities;
+            if (!shouldDisplayAll && filteredFacilities.length > 200) {
+                facilitiesToDisplay = filteredFacilities.slice(0, 200);
+                console.log(`Performance: Showing ${facilitiesToDisplay.length} of ${filteredFacilities.length} facilities at zoom ${currentZoom}`);
+            }
+            
+            // Create markers
+            const markers = facilitiesToDisplay.map(facility => {
+                const coords = facility.geometry.coordinates;
+                const props = facility.properties;
+                
+                // Create icon based on type
+                const icon = getFacilityIcon(props.type);
+                
+                // Create marker
+                const marker = L.marker([coords[1], coords[0]], { icon: icon });
+                
+                // Create popup content
+                const popupContent = `
+                    <div class="facility-popup">
+                        <h4>${props.name}</h4>
+                        <p><strong>Type:</strong> ${props.type}</p>
+                        <p><strong>Category:</strong> ${props.category}</p>
+                        ${props['addr:city'] ? `<p><strong>City:</strong> ${props['addr:city']}</p>` : ''}
+                    </div>
+                `;
+                
+                marker.bindPopup(popupContent);
+                return marker;
+            });
+            
+            // Add markers to cluster group
+            markerClusterGroup.addLayers(markers);
+            
+            // Update UI
+            updateFilterButtons();
+            updateStats();
+            updateZoomInfo();
+        }
+        
+        // Get icon for facility type
+        function getFacilityIcon(type) {
+            const iconMap = {
+                hospital: { color: '#dc3545', symbol: '🏥' },
+                clinic: { color: '#fd7e14', symbol: '🏥' },
+                pharmacy: { color: '#28a745', symbol: '💊' },
+                school: { color: '#17a2b8', symbol: '🎓' },
+                university: { color: '#6610f2', symbol: '🎓' },
+                college: { color: '#6f42c1', symbol: '🎓' },
+                bank: { color: '#007bff', symbol: '🏦' },
+                airport: { color: '#e83e8c', symbol: '✈️' }
+            };
+            
+            const iconConfig = iconMap[type] || { color: '#6c757d', symbol: '📍' };
+            
+            return L.divIcon({
+                html: `<div style="background: ${iconConfig.color}; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">${iconConfig.symbol}</div>`,
+                className: 'facility-marker',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+        }
+        
+        // Update filter button states
+        function updateFilterButtons() {
+            // Update type filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.type === currentTypeFilter) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Update county dropdown
+            const countySelect = document.getElementById('countyFilter');
+            countySelect.value = currentCountyFilter;
+        }
+        
+        // Update statistics
+        function updateStats() {
+            let visibleCount = 0;
+            const currentZoom = map.getZoom();
+            
+            // Apply same filtering logic as display
+            let filteredFacilities = allFacilities;
+            
+            // County filtering
+            if (currentCountyFilter !== 'all') {
+                filteredFacilities = filteredFacilities.filter(facility => {
+                    const city = facility.properties['addr:city'];
+                    return city && city.toLowerCase() === currentCountyFilter.toLowerCase();
+                });
+            }
+            
+            // Type filtering
+            if (currentTypeFilter !== 'all') {
+                filteredFacilities = filteredFacilities.filter(facility => 
+                    facility.properties.type === currentTypeFilter
+                );
+            }
+            
+            // Search filtering
+            if (currentSearchTerm && currentSearchTerm.trim() !== '') {
+                filteredFacilities = filteredFacilities.filter(facility => 
+                    facility.properties.name.toLowerCase().includes(currentSearchTerm.toLowerCase())
+                );
+            }
+            
+            visibleCount = currentZoom >= 10 ? filteredFacilities.length : Math.min(200, filteredFacilities.length);
+            
+            const totalByType = {};
+            allFacilities.forEach(facility => {
+                const type = facility.properties.type;
+                totalByType[type] = (totalByType[type] || 0) + 1;
+            });
+            
+            let statsHTML = `<strong>Total:</strong> ${allFacilities.length} facilities<br>`;
+            
+            if (currentCountyFilter !== 'all') {
+                const countyFiltered = allFacilities.filter(facility => {
+                    const city = facility.properties['addr:city'];
+                    return city && city.toLowerCase() === currentCountyFilter.toLowerCase();
+                });
+                statsHTML += `<strong>County (${currentCountyFilter}):</strong> ${countyFiltered.length}<br>`;
+            }
+            
+            if (currentTypeFilter !== 'all') {
+                const typeFiltered = filteredFacilities;
+                statsHTML += `<strong>${currentTypeFilter}:</strong> ${typeFiltered.length}<br>`;
+            }
+            
+            if (currentSearchTerm && currentSearchTerm.trim() !== '') {
+                const searchFiltered = filteredFacilities;
+                statsHTML += `<strong>Search ("${currentSearchTerm}"):</strong> ${searchFiltered.length}<br>`;
+            }
+            
+            statsHTML += `<strong>Visible:</strong> ${visibleCount}`;
+            
+            document.getElementById('stats').innerHTML = statsHTML;
+        }
+        
+        // Update zoom information
+        function updateZoomInfo() {
+            const zoom = map.getZoom();
+            document.getElementById('zoomLevel').textContent = zoom.toFixed(1);
+            
+            // Count visible markers (approximate)
+            let visibleCount = 0;
+            if (zoom >= 10) {
+                if (currentTypeFilter === 'all') {
+                    visibleCount = allFacilities.length;
+                } else {
+                    visibleCount = allFacilities.filter(f => f.properties.type === currentTypeFilter).length;
+                }
+            } else {
+                visibleCount = Math.min(200, currentTypeFilter === 'all' ? allFacilities.length : 
+                    allFacilities.filter(f => f.properties.type === currentTypeFilter).length);
+            }
+            
+            document.getElementById('visibleCount').textContent = visibleCount;
+        }
+        
+        // Show/hide loading
+        function showLoading(show) {
+            isLoading = show;
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+        
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            initMap();
+            
+            // Filter button clicks
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (!isLoading) {
+                        const type = this.dataset.type;
+                        displayFacilities(type, null, null);
+                    }
+                });
+            });
+            
+            // County dropdown change
+            document.getElementById('countyFilter').addEventListener('change', function() {
+                console.log('County dropdown changed to:', this.value);
+                if (!isLoading) {
+                    const county = this.value;
+                    console.log('Calling displayFacilities with county:', county);
+                    displayFacilities(null, county, null);
+                } else {
+                    console.log('isLoading is true, not calling displayFacilities');
+                }
+            });
+            
+            // Search input
+            const searchInput = document.getElementById('searchInput');
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    if (!isLoading) {
+                        const searchTerm = this.value;
+                        displayFacilities(null, null, searchTerm);
+                    }
+                }, 300); // Fast debounce - 300ms
+            });
+        });
+    </script>
+</body>
+</html>

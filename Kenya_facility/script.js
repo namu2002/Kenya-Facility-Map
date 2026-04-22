@@ -1,37 +1,28 @@
 // Global variables
 let map = null;
 let facilities = [];
-let allFacilities = []; // Store all facilities for heatmap
 let markers = [];
 let markerCluster = null;
-let currentLayer = 'streets';
-let heatmapLayer = null;
 let userLocation = null;
 let selectedFacility = null;
 let routingControl = null;
-let isHeatmapActive = false;
-let usingSampleData = false; // FIX #1 - Track if using sample data
-let searchInitialized = false; // Track if search has been initialized
-
-// Performance optimization variables
-let visibleMarkers = new Map(); // Only store visible markers
-let markerPool = []; // Reusable marker pool
-let viewportBounds = null;
-let lastViewportUpdate = 0;
-let renderQueue = [];
-let isRendering = false;
-let batchSize = 100; // Process markers in batches
-let renderTimeout = null;
+let apiCache = new Map(); // Cache API responses
+let iconCache = new Map(); // Cache map icons
 
 // Nearest road calculation - finds road with shortest driving path
 function findNearestRoad(lat, lng, callback) {
-    console.log('Finding nearest road with shortest driving path for:', lat, lng);
+    // Check cache first
+    const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+    if (apiCache.has(cacheKey)) {
+        callback(null, apiCache.get(cacheKey));
+        return;
+    }
     
     // Use Overpass API to query nearby roads
     const overpassQuery = `
-        [out:json][timeout:25];
+        [out:json][timeout:10];
         (
-            way["highway"](around:500,${lat},${lng});
+            way["highway"](around:200,${lat},${lng});
         );
         out geom;
     `;
@@ -41,8 +32,6 @@ function findNearestRoad(lat, lng, callback) {
     fetch(overpassUrl)
         .then(response => response.json())
         .then(data => {
-            console.log('Overpass API response:', data);
-            
             if (data.elements && data.elements.length > 0) {
                 findRoadWithShortestPath(data.elements, lat, lng, callback);
             } else {
@@ -50,19 +39,19 @@ function findNearestRoad(lat, lng, callback) {
             }
         })
         .catch(error => {
-            console.error('Error finding nearest road:', error);
             callback(error, null);
         });
 }
 
 // Find road with shortest driving path using OSRM routing
 function findRoadWithShortestPath(roads, facilityLat, facilityLng, callback) {
-    console.log('Analyzing', roads.length, 'roads for shortest path...');
+    // Limit to first 5 roads for performance
+    const limitedRoads = roads.slice(0, 5);
     
     let roadResults = [];
     let processedCount = 0;
     
-    roads.forEach((road, index) => {
+    limitedRoads.forEach((road, index) => {
         if (road.geometry && road.geometry.length > 0) {
             // Find a representative point on this road (middle point)
             const roadPoint = road.geometry[Math.floor(road.geometry.length / 2)];
@@ -85,23 +74,22 @@ function findRoadWithShortestPath(roads, facilityLat, facilityLng, callback) {
                     }
                     
                     processedCount++;
-                    if (processedCount === roads.length) {
+                    if (processedCount === limitedRoads.length) {
                         // All roads processed, find the one with shortest path
                         const shortestRoad = findShortestDrivingRoad(roadResults);
                         callback(null, shortestRoad);
                     }
                 })
                 .catch(error => {
-                    console.error('Error calculating route for road', index, ':', error);
                     processedCount++;
-                    if (processedCount === roads.length) {
+                    if (processedCount === limitedRoads.length) {
                         const shortestRoad = findShortestDrivingRoad(roadResults);
                         callback(null, shortestRoad);
                     }
                 });
         } else {
             processedCount++;
-            if (processedCount === roads.length) {
+            if (processedCount === limitedRoads.length) {
                 const shortestRoad = findShortestDrivingRoad(roadResults);
                 callback(null, shortestRoad);
             }
@@ -109,7 +97,7 @@ function findRoadWithShortestPath(roads, facilityLat, facilityLng, callback) {
     });
     
     // Handle case where no roads have valid geometry
-    if (roads.length === 0) {
+    if (limitedRoads.length === 0) {
         callback('No valid roads found', null);
     }
 }
@@ -124,7 +112,6 @@ function findShortestDrivingRoad(roadResults) {
     roadResults.sort((a, b) => a.drivingDistance - b.drivingDistance);
     
     const shortest = roadResults[0];
-    console.log('Shortest driving road found:', shortest);
     
     return {
         name: shortest.road.tags.name || 'Unnamed road',
@@ -149,6 +136,19 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
         Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return R * c * 1000; // Convert to meters
+}
+
+// Optimized point-in-polygon algorithm for precise county detection
+function isPointInPolygon(lat, lng, polyCoords) {
+    let x = lng, y = lat;
+    let inside = false;
+    for (let i = 0, j = polyCoords.length - 1; i < polyCoords.length; j = i++) {
+        let xi = polyCoords[i][0], yi = polyCoords[i][1];
+        let xj = polyCoords[j][0], yj = polyCoords[j][1];
+        let intersect = ((yi > y) != (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+    }
+    return inside;
 }
 
 // Kenya landmarks database for enhanced navigation
@@ -298,28 +298,24 @@ let voicesLoaded = false;
 function initializeVoices() {
     if (speechSynthesis.getVoices().length !== 0) {
         voicesLoaded = true;
-        console.log('Voices loaded:', speechSynthesis.getVoices().length);
     } else {
         speechSynthesis.addEventListener('voiceschanged', () => {
             voicesLoaded = true;
-            console.log('Voices loaded after voiceschanged:', speechSynthesis.getVoices().length);
         }, { once: true });
     }
 }
 
 // Speak navigation instructions with proper queue management
 function speakNavigation(text, priority = false) {
-    console.log('Queueing speech:', text, 'Priority:', priority);
-    
-    // Check if speech synthesis is available
-    if (!window.speechSynthesis) {
-        console.error('Speech synthesis not supported in this browser');
-        return;
+    if (!consoleLogEnabled) {
+        // Check if speech synthesis is available
+        if (!window.speechSynthesis) {
+            return;
+        }
     }
     
     // Ensure voices are loaded
     if (!voicesLoaded) {
-        console.log('Voices not loaded yet, waiting...');
         setTimeout(() => speakNavigation(text, priority), 100);
         return;
     }
@@ -329,7 +325,6 @@ function speakNavigation(text, priority = false) {
         // Cancel current speech
         if (speechSynthesis.speaking) {
             speechSynthesis.cancel();
-            console.log('Cancelled current speech for priority message');
         }
         // Clear queue for priority messages
         speechQueue = [];
@@ -351,7 +346,6 @@ function processSpeechQueue() {
     }
     
     if (speechSynthesis.speaking) {
-        console.log('Speech synthesis is busy, waiting...');
         setTimeout(() => processSpeechQueue(), 100);
         return;
     }
@@ -359,7 +353,6 @@ function processSpeechQueue() {
     isProcessingQueue = true;
     const speechItem = speechQueue.shift();
     
-    console.log('Processing speech item:', speechItem.text);
     speakNow(speechItem.text, speechItem.priority);
 }
 
@@ -373,7 +366,6 @@ function speakNow(text, isPriority = false) {
     
     // Select the best available voice
     const voices = speechSynthesis.getVoices();
-    console.log('Available voices:', voices.length);
     
     // Prioritize male voices (original setting)
     const preferredVoices = [
@@ -411,60 +403,47 @@ function speakNow(text, isPriority = false) {
     
     if (selectedVoice) {
         utterance.voice = selectedVoice;
-        console.log('Using voice:', selectedVoice.name, 'Lang:', selectedVoice.lang);
-    } else {
-        console.log('Using default voice');
     }
     
     // Add event listeners for better debugging and queue management
     utterance.onstart = () => {
-        console.log('Speech started:', text);
+        // Speech started
     };
     
     utterance.onend = () => {
-        console.log('Speech ended:', text);
         currentUtterance = null;
         isProcessingQueue = false;
         
-        // Process next item in queue after a short delay
-        setTimeout(() => {
-            processSpeechQueue();
-        }, 200);
+        // Process next item in queue
+        setTimeout(() => processSpeechQueue(), 50);
     };
     
     utterance.onerror = (event) => {
-        console.error('Speech error:', event.error);
         currentUtterance = null;
         isProcessingQueue = false;
         
-        // Continue processing queue even after error
-        setTimeout(() => {
-            processSpeechQueue();
-        }, 500);
+        // Continue processing queue even on error
+        setTimeout(() => processSpeechQueue(), 100);
     };
     
     utterance.onpause = () => {
-        console.log('Speech paused');
+        // Speech paused
     };
     
     utterance.onresume = () => {
-        console.log('Speech resumed');
+        // Speech resumed
     };
     
     currentUtterance = utterance;
     
     try {
         speechSynthesis.speak(utterance);
-        console.log('Speech queued successfully');
     } catch (error) {
-        console.error('Error speaking:', error);
         currentUtterance = null;
         isProcessingQueue = false;
         
-        // Try to continue with next item
-        setTimeout(() => {
-            processSpeechQueue();
-        }, 500);
+        // Continue processing queue
+        setTimeout(() => processSpeechQueue(), 100);
     }
 }
 
@@ -484,11 +463,9 @@ function getUserLocation() {
                     lng: position.coords.longitude
                 };
                 userLocation = location;
-                console.log('User location obtained:', location);
                 resolve(location);
             },
             (error) => {
-                console.error('Error getting location:', error);
                 reject(error);
             },
             {
@@ -503,7 +480,6 @@ function getUserLocation() {
 // Initialize user location on page load
 function initializeUserLocation() {
     getUserLocation().then(location => {
-        console.log('User location initialized:', location);
         // Add user location marker to map
         if (map && location) {
             const userMarker = L.marker([location.lat, location.lng], {
@@ -516,7 +492,7 @@ function initializeUserLocation() {
             userMarker.bindPopup('Your Location');
         }
     }).catch(error => {
-        console.log('Could not get user location, will use manual input');
+        // Location not available
     });
 }
 
@@ -545,28 +521,60 @@ const mapLayers = {
     })
 };
 
-// Facility type colors
+// Facility type colors by category
 const facilityColors = {
+    // Health
     'Hospital': '#ea4335',
     'Clinic': '#f39c12',
-    'Pharmacy': '#00acc1',
-    'Dental Clinic': '#9c27b0',
-    'Blood Bank': '#e91e63',
+    'Medical': '#ff5722',
+    'Health Facility': '#ff5722',
+    
+    // Education
     'School': '#4285F4',
     'University': '#1565c0',
     'College': '#1976d2',
-    'Library': '#7b1fa2',
-    'Education Facility': '#3f51b5',
-    'Airport': '#ff6d00',
-    'Health Facility': '#ff5722',
+    'Education': '#3f51b5',
+    
+    // Religious
+    'Church': '#8e24aa',
+    'Cathedral': '#8e24aa',
+    'Mosque': '#8e24aa',
+    'Temple': '#8e24aa',
+    
+    // Financial
     'Bank': '#2e7d32',
     'ATM': '#0288d1',
-    'Money Transfer': '#795548',
-    'Post Office': '#d32f2f',
-    'Bureau de Change': '#ff9800',
-    'Financial Service': '#607d8b',
-    'Place of Worship': '#8e24aa',
-    'Church': '#8e24aa'
+    'Financial': '#607d8b',
+    
+    // Hotels
+    'Hotel': '#ff6d00',
+    'Lodge': '#ff6d00',
+    
+    // Food
+    'Restaurant': '#f44336',
+    'Cafe': '#f44336',
+    'Bar': '#f44336',
+    
+    // Services
+    'Police Station': '#424242',
+    'Fire Station': '#ff5722',
+    'Library': '#7b1fa2',
+    
+    // Recreation
+    'Park': '#4caf50',
+    'Garden': '#4caf50',
+    
+    // Shopping
+    'Market': '#ff9800',
+    'Mall': '#ff9800',
+    
+    // Transport
+    'Airport': '#ff6d00',
+    'Transport': '#ff6d00',
+    
+    // Default
+    'Facility': '#5f6368',
+    'POI': '#9e9e9e'
 };
 
 // Virtual rendering functions for performance
@@ -687,19 +695,12 @@ function handleMapMove() {
     }, 200); // Debounce for 200ms
 }
 
-// Initialize GPS-style map
 function initMap() {
-    console.log('JavaScript is working!');
-    console.log('Initializing GPS-style map...');
+    map = L.map('map').setView([-1.2921, 36.8219], 6);
     
-    map = L.map('map', {
-        center: [-1.2864, 36.8172], // Nairobi
-        zoom: 13, // Higher zoom for better road visibility
-        zoomControl: false
-    });
-    
-    // Start with navigation layer for GPS-like appearance
-    mapLayers.navigation.addTo(map);
+    // Add base layers
+    mapLayers.streets.addTo(map);
+    currentLayer = 'streets';
     
     // Set bounds to Kenya
     const kenyaBounds = [[-4.9, 33.7], [5.0, 42.0]];
@@ -708,47 +709,30 @@ function initMap() {
     // Add road overlay for enhanced road visibility
     mapLayers.roads.addTo(map);
     
-    // GPS-style map enhancements
-    addGPSStyleEnhancements();
-    
-    // DISABLE virtual rendering to show all facilities
-    // updateViewportBounds();
-    
-    // DISABLE event listeners for virtual rendering
-    // map.on('moveend', handleMapMove);
+    // Set active button
+    document.getElementById('mapViewBtn').classList.add('active');
     // map.on('zoomend', handleMapMove);
     
-    console.log('Virtual rendering DISABLED - showing all facilities');
+    // Virtual rendering disabled for performance
 }
 
-// GPS-style map enhancements
+// GPS-style map enhancements - DISABLED for performance
 function addGPSStyleEnhancements() {
-    // Add custom CSS for GPS-style appearance
+    // DISABLED: Resource-intensive GPS features
+    
+    // Only add minimal styling
     const gpsStyles = document.createElement('style');
     gpsStyles.textContent = `
         .leaflet-container {
             background: #f8f9fa;
         }
-        .leaflet-tile-pane {
-            filter: contrast(1.1) saturate(1.2);
-        }
-        .gps-navigation-mode .leaflet-tile-pane {
-            filter: contrast(1.2) saturate(1.3) brightness(1.05);
-        }
-        .gps-road-highlight {
-            filter: drop-shadow(0 0 3px rgba(66, 133, 244, 0.6));
-        }
     `;
     document.head.appendChild(gpsStyles);
     
-    // Add GPS compass control
-    addGPSCompass();
-    
-    // Add speed limit indicator (simulated)
-    addSpeedIndicator();
-    
-    // Add current road name display
-    addCurrentRoadDisplay();
+    // DISABLED: GPS compass, speed indicator, and road display for performance
+    // addGPSCompass();
+    // addSpeedIndicator();
+    // addCurrentRoadDisplay();
 }
 
 // Add GPS compass
@@ -841,58 +825,482 @@ function styleGPSRoute(route) {
     };
 }
 
-// Animate route like GPS navigation (updated with realistic timing)
-function animateGPSRoute(routeCoordinates) {
-    if (!routeCoordinates || routeCoordinates.length < 2) return;
-    
-    const routeLine = L.polyline(routeCoordinates, styleGPSRoute()).addTo(map);
-    
-    // Add animated car marker
-    const carIcon = L.divIcon({
-        html: '<div style="background: #4285F4; width: 20px; height: 12px; border: 2px solid white; border-radius: 3px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
-        iconSize: [24, 16],
-        className: 'gps-car-marker'
-    });
-    
-    let currentIndex = 0;
-    const carMarker = L.marker(routeCoordinates[0], { icon: carIcon }).addTo(map);
-    
-    // Calculate realistic timing
-    let totalDistance = 0;
-    for (let i = 0; i < routeCoordinates.length - 1; i++) {
-        totalDistance += calculateDistance(
-            routeCoordinates[i][0], routeCoordinates[i][1],
-            routeCoordinates[i + 1][0], routeCoordinates[i + 1][1]
-        );
+// GPS Navigation - Car follows actual roads with REAL turn-by-turn directions
+function animateGPSRoute(routeCoordinates, routeSteps) {
+    if (!routeCoordinates || routeCoordinates.length < 2) {
+        console.log('No route coordinates for GPS navigation');
+        return;
     }
     
-    // Set realistic speed (30 km/h = 8.33 m/s for demonstration)
-    const averageSpeed = 8.33; // meters per second
-    const totalDuration = totalDistance / averageSpeed; // seconds
-    const animationSpeed = (totalDuration * 1000) / routeCoordinates.length; // ms per segment
+    console.log('Starting GPS navigation along', routeCoordinates.length, 'road points');
+    console.log('Route steps:', routeSteps ? routeSteps.length : 0);
     
-    // Ensure reasonable timing
-    const finalAnimationSpeed = Math.max(300, Math.min(animationSpeed, 1500)); // between 300ms and 1.5s
+    // Clear ALL existing car markers and related elements
+    if (window.carMarker) {
+        map.removeLayer(window.carMarker);
+        window.carMarker = null;
+    }
+    if (window.pulseMarker) {
+        map.removeLayer(window.pulseMarker);
+        window.pulseMarker = null;
+    }
     
-    console.log('GPS Route - Distance:', totalDistance.toFixed(0), 'm, Duration:', (totalDuration / 60).toFixed(1), 'min, Speed:', finalAnimationSpeed.toFixed(0), 'ms/segment');
+    // Remove any existing car-pulse elements from DOM
+    document.querySelectorAll('.car-pulse, .car-marker').forEach(el => {
+        if (el.parentElement) el.parentElement.remove();
+    });
     
-    function animateCar() {
-        if (currentIndex < routeCoordinates.length - 1) {
-            currentIndex++;
-            carMarker.setLatLng(routeCoordinates[currentIndex]);
+    // Create realistic GPS car marker - bigger and car-shaped
+    const carIcon = L.divIcon({
+        html: `
+            <div style="
+                width: 40px;
+                height: 40px;
+                position: relative;
+                filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+            ">
+                <!-- Car body -->
+                <div style="
+                    position: absolute;
+                    bottom: 8px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 28px;
+                    height: 20px;
+                    background: linear-gradient(135deg, #1a73e8 0%, #4285F4 50%, #1a73e8 100%);
+                    border-radius: 6px 6px 3px 3px;
+                    border: 2px solid white;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                "></div>
+                <!-- Car roof/windshield -->
+                <div style="
+                    position: absolute;
+                    bottom: 22px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 18px;
+                    height: 10px;
+                    background: linear-gradient(135deg, #42a5f5 0%, #90caf9 100%);
+                    border-radius: 4px 4px 0 0;
+                    border: 2px solid white;
+                    border-bottom: none;
+                "></div>
+                <!-- Front indicator arrow -->
+                <div style="
+                    position: absolute;
+                    top: 0;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    width: 0;
+                    height: 0;
+                    border-left: 8px solid transparent;
+                    border-right: 8px solid transparent;
+                    border-bottom: 12px solid #ea4335;
+                    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+                "></div>
+                <!-- Wheels -->
+                <div style="
+                    position: absolute;
+                    bottom: 4px;
+                    left: 6px;
+                    width: 6px;
+                    height: 6px;
+                    background: #333;
+                    border-radius: 50%;
+                    border: 1px solid white;
+                "></div>
+                <div style="
+                    position: absolute;
+                    bottom: 4px;
+                    right: 6px;
+                    width: 6px;
+                    height: 6px;
+                    background: #333;
+                    border-radius: 50%;
+                    border: 1px solid white;
+                "></div>
+            </div>
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
+        className: 'gps-car'
+    });
+    
+    window.carMarker = L.marker(routeCoordinates[0], { icon: carIcon }).addTo(map);
+    window.carMarker.setZIndexOffset(1000);
+    
+    let currentIndex = 0;
+    const totalPoints = routeCoordinates.length;
+    let currentStepIndex = 0;
+    
+    // Build real turn-by-turn directions from OSRM steps with proper GPS announcements
+    let turnByTurnDirections = [];
+    if (routeSteps && routeSteps.length > 0) {
+        let lastStreet = '';
+        let cumulativeDistance = 0;
+        
+        routeSteps.forEach((step, idx) => {
+            // Get maneuver information
+            const maneuver = step.maneuver || {};
+            const maneuverType = maneuver.type || 'straight';
+            const modifier = maneuver.modifier || '';
+            let instruction = maneuver.instruction || '';
+            const street = step.name || '';
+            const stepDistance = step.distance;
+            const distanceKm = (stepDistance / 1000).toFixed(1);
+            const distanceM = Math.round(stepDistance);
             
-            // Center map on car with smooth pan
-            map.panTo(routeCoordinates[currentIndex], {
-                animate: true,
-                duration: 0.5
-            });
+            // Build proper GPS-style instruction
+            let gpsInstruction = '';
+            let announcementType = 'straight';
             
-            setTimeout(animateCar, finalAnimationSpeed);
+            // Handle different maneuver types
+            if (maneuverType === 'roundabout' || instruction.toLowerCase().includes('roundabout')) {
+                // Roundabout handling
+                const exit = maneuver.exit || 1;
+                const exitText = exit === 1 ? 'first' : exit === 2 ? 'second' : exit === 3 ? 'third' : exit + 'th';
+                gpsInstruction = `At the roundabout, take the ${exitText} exit`;
+                if (street) gpsInstruction += ` onto ${street}`;
+                announcementType = 'roundabout';
+                
+            } else if (maneuverType === 'turn' || maneuverType === 'left' || maneuverType === 'right') {
+                // Turn handling
+                let turnText = '';
+                if (modifier === 'left' || maneuverType === 'left') turnText = 'Turn left';
+                else if (modifier === 'right' || maneuverType === 'right') turnText = 'Turn right';
+                else if (modifier === 'slight left') turnText = 'Turn slight left';
+                else if (modifier === 'slight right') turnText = 'Turn slight right';
+                else turnText = 'Turn';
+                
+                gpsInstruction = turnText;
+                if (street && street !== lastStreet) {
+                    gpsInstruction += ` onto ${street}`;
+                } else if (street) {
+                    gpsInstruction += ` on ${street}`;
+                }
+                announcementType = 'turn';
+                
+            } else if (maneuverType === 'uturn') {
+                gpsInstruction = 'Make a U-turn';
+                if (street) gpsInstruction += ` on ${street}`;
+                announcementType = 'uturn';
+                
+            } else if (maneuverType === 'new name' || (street && street !== lastStreet && stepDistance < 100)) {
+                // Road name change
+                gpsInstruction = `Continue onto ${street}`;
+                announcementType = 'road_change';
+                
+            } else if (maneuverType === 'straight' || stepDistance > 500) {
+                // Long straight section
+                if (street && street !== lastStreet) {
+                    gpsInstruction = `Continue on ${street}`;
+                    announcementType = 'straight';
+                } else {
+                    // Skip short straight segments without road changes
+                    return;
+                }
+                
+            } else if (maneuverType === 'arrive' || idx === routeSteps.length - 1) {
+                gpsInstruction = 'You have arrived at your destination';
+                announcementType = 'arrive';
+                
+            } else {
+                // Skip other minor instructions
+                return;
+            }
+            
+            // Remove 'end of road' and clean up
+            gpsInstruction = gpsInstruction.replace(/end of road/gi, '').replace(/\s+/g, ' ').trim();
+            
+            // Only add meaningful directions
+            if (gpsInstruction && gpsInstruction.length > 3) {
+                turnByTurnDirections.push({
+                    instruction: gpsInstruction,
+                    street: street,
+                    distance: distanceKm,
+                    distanceMeters: distanceM,
+                    type: announcementType,
+                    modifier: modifier,
+                    stepIndex: idx
+                });
+                lastStreet = street;
+            }
+        });
+    }
+    
+    // Fallback directions if no OSRM steps or all filtered out
+    if (turnByTurnDirections.length === 0) {
+        turnByTurnDirections = [
+            { instruction: 'Start navigation', street: '', distance: '0' },
+            { instruction: 'Follow the route', street: '', distance: '0' },
+            { instruction: 'Arrive at destination', street: '', distance: '0' }
+        ];
+    }
+    
+    console.log('Turn-by-turn directions:', turnByTurnDirections);
+    
+    // Speak directions - ensure speech works
+    function speak(text) {
+        if ('speechSynthesis' in window) {
+            // Cancel any ongoing speech to prevent queue buildup
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.9;
+            utterance.volume = 1.0;
+            utterance.pitch = 1.0;
+            
+            // Try to resume speech synthesis (needed for some browsers)
+            if (window.speechSynthesis.paused) {
+                window.speechSynthesis.resume();
+            }
+            
+            window.speechSynthesis.speak(utterance);
+            console.log('Speaking:', text);
+        } else {
+            console.log('Speech synthesis not supported');
         }
     }
     
-    setTimeout(animateCar, 1000);
+    // Initialize speech on first user interaction (required by browsers)
+    function initSpeech() {
+        if ('speechSynthesis' in window) {
+            // Speak a silent utterance to unlock speech
+            const silent = new SpeechSynthesisUtterance('');
+            silent.volume = 0;
+            window.speechSynthesis.speak(silent);
+            console.log('Speech synthesis initialized');
+        }
+    }
+    
+    // Initialize speech now
+    initSpeech();
+    
+    // Get current direction based on progress
+    function getCurrentDirection(progress) {
+        const dirIndex = Math.floor(progress * (turnByTurnDirections.length - 1));
+        return turnByTurnDirections[Math.min(dirIndex, turnByTurnDirections.length - 1)];
+    }
+    
+    // Update directions panel with real turn-by-turn info
+    function updatePanel(progress) {
+        const panel = document.getElementById('directionsRoute');
+        if (panel) {
+            const direction = getCurrentDirection(progress);
+            const nextDirection = turnByTurnDirections[Math.min(currentStepIndex + 1, turnByTurnDirections.length - 1)];
+            
+            let instructionText = direction.instruction;
+            if (direction.street && direction.street !== 'the road') {
+                instructionText += ` on ${direction.street}`;
+            }
+            
+            panel.innerHTML = `
+                <div style="background: #4285F4; color: white; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
+                    <div style="font-size: 16px; font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+                        <span><i class="fas fa-location-arrow"></i> GPS Navigation</span>
+                        <i class="fas fa-volume-up" style="font-size: 14px; opacity: 0.8;"></i>
+                    </div>
+                    <div style="font-size: 14px; margin-top: 8px; font-weight: 500;">${instructionText}</div>
+                    ${direction.distance > 0 ? `<div style="font-size: 12px; margin-top: 5px; opacity: 0.9;">${direction.distance} km</div>` : ''}
+                </div>
+                <div style="padding: 10px; background: #f0f0f0; border-radius: 6px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <div>Progress: ${Math.round(progress * 100)}%</div>
+                        <div>Step ${currentStepIndex + 1}/${turnByTurnDirections.length}</div>
+                    </div>
+                    ${nextDirection && nextDirection.instruction !== direction.instruction ? `
+                    <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd; font-size: 12px; color: #666;">
+                        <i class="fas fa-arrow-right"></i> Next: ${nextDirection.instruction}${nextDirection.street ? ' on ' + nextDirection.street : ''}
+                    </div>
+                    ` : ''}
+                    <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #ddd; font-size: 11px; color: #888; text-align: center;">
+                        <i class="fas fa-headphones"></i> Voice navigation active
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // Start voice navigation with user interaction check
+    const startNavigation = () => {
+        speak("Starting GPS navigation.");
+        setTimeout(() => {
+            const firstDir = turnByTurnDirections[0];
+            let intro = firstDir.instruction;
+            if (firstDir.street && firstDir.street !== 'the road') {
+                intro += ` on ${firstDir.street}`;
+            }
+            speak(intro);
+        }, 500);
+    };
+    
+    // Small delay to ensure browser allows speech after click
+    setTimeout(startNavigation, 100);
+    
+    updatePanel(0);
+    
+    // GPS Animation loop - synchronized with voice and distance-based timing
+    let lastSpokenStep = -1;
+    let carStartTime = Date.now();
+    let isSpeaking = false;
+    
+    // Calculate segment distances for realistic timing
+    const segmentDistances = [];
+    let totalRouteDistance = 0;
+    for (let i = 0; i < routeCoordinates.length - 1; i++) {
+        const dist = calculateDistance(
+            routeCoordinates[i][0], routeCoordinates[i][1],
+            routeCoordinates[i + 1][0], routeCoordinates[i + 1][1]
+        );
+        segmentDistances.push(dist);
+        totalRouteDistance += dist;
+    }
+    
+    // Average car speed: 120 km/h = 33.33 m/s for fast highway driving
+    const carSpeedMPS = 33.33;
+    
+    // Estimate time for voice to speak (average 3 words per second)
+    function estimateSpeechTime(text) {
+        const wordCount = text.split(' ').length;
+        return (wordCount / 2.5) * 1000; // milliseconds
+    }
+    
+    function navigateStep() {
+        if (currentIndex >= routeCoordinates.length) {
+            // Arrived
+            if (lastSpokenStep !== turnByTurnDirections.length - 1) {
+                speak("You have arrived at your destination.");
+            }
+            updatePanel(1);
+            return;
+        }
+        
+        const position = routeCoordinates[currentIndex];
+        const progress = currentIndex / routeCoordinates.length;
+        
+        // Calculate current step index
+        const stepProgress = Math.floor(progress * turnByTurnDirections.length);
+        currentStepIndex = Math.min(stepProgress, turnByTurnDirections.length - 1);
+        
+        // Move car to current position
+        window.carMarker.setLatLng(position);
+        
+        // Smooth map following (only pan every 5 points)
+        if (currentIndex % 5 === 0) {
+            map.panTo(position);
+        }
+        
+        // Update panel every 20 points
+        if (currentIndex % 20 === 0) {
+            updatePanel(progress);
+        }
+        
+        // Voice directions at step changes
+        if (currentStepIndex !== lastSpokenStep && currentStepIndex < turnByTurnDirections.length) {
+            lastSpokenStep = currentStepIndex;
+            isSpeaking = true;
+            
+            const direction = turnByTurnDirections[currentStepIndex];
+            const nextDirection = turnByTurnDirections[currentStepIndex + 1];
+            
+            // Build GPS announcement
+            let announcement = '';
+            
+            if (currentStepIndex === 0) {
+                announcement = `Starting navigation. ${direction.instruction}`;
+                if (direction.distanceMeters > 100) {
+                    announcement += ` for ${direction.distance} kilometers.`;
+                }
+            } else if (direction.type === 'roundabout') {
+                announcement = `Approaching roundabout. ${direction.instruction}`;
+            } else if (direction.type === 'turn' || direction.type === 'left' || direction.type === 'right') {
+                if (nextDirection && nextDirection.distanceMeters < 200) {
+                    announcement = `In ${nextDirection.distanceMeters} meters, ${nextDirection.instruction}`;
+                } else if (nextDirection && nextDirection.distanceMeters < 1000) {
+                    announcement = `In ${Math.round(nextDirection.distanceMeters / 100) * 100} meters, ${nextDirection.instruction}`;
+                } else {
+                    announcement = direction.instruction;
+                    if (direction.distanceMeters > 500) {
+                        announcement += `. Continue for ${direction.distance} kilometers.`;
+                    } else if (direction.distanceMeters > 100) {
+                        announcement += `. Continue for ${direction.distanceMeters} meters.`;
+                    }
+                }
+            } else if (direction.type === 'road_change') {
+                announcement = direction.instruction;
+            } else if (direction.type === 'straight' && direction.distanceMeters > 1000) {
+                announcement = `Continue on ${direction.street} for ${direction.distance} kilometers.`;
+            } else if (currentStepIndex === turnByTurnDirections.length - 1 || direction.type === 'arrive') {
+                announcement = 'You have arrived at your destination.';
+            }
+            
+            if (announcement) {
+                console.log('Announcing:', announcement);
+                speak(announcement);
+                
+                // Calculate timing: car should arrive at next step when voice finishes
+                const speechTime = estimateSpeechTime(announcement);
+                const nextStepDistance = segmentDistances[currentIndex] || 50;
+                const timeToNextStep = (nextStepDistance / carSpeedMPS) * 1000;
+                
+                // If speech is longer than travel time, pause car until speech finishes
+                const pauseTime = Math.max(0, speechTime - timeToNextStep);
+                
+                // Don't pause car for voice - let car move fast, voice will catch up
+                // Car speed priority over voice sync for 120kph experience
+                
+                setTimeout(() => { isSpeaking = false; }, speechTime);
+            }
+        }
+        
+        // Calculate time for this segment based on actual distance
+        const segmentDistance = segmentDistances[currentIndex] || 50; // meters
+        const segmentTime = Math.max(20, (segmentDistance / carSpeedMPS) * 1000); // milliseconds, min 20ms for max speed
+        
+        currentIndex++;
+        setTimeout(navigateStep, segmentTime);
+    }
+    
+    navigateStep();
 }
+
+// Simple test function for debugging
+window.testCarAnimation = function() {
+    console.log('=== TESTING CAR ANIMATION ===');
+    
+    const testCoords = [
+        [-1.2921, 36.8219],
+        [-1.2915, 36.8225],
+        [-1.2910, 36.8230],
+        [-1.2905, 36.8235]
+    ];
+    
+    console.log('Test coordinates:', testCoords);
+    
+    // Clear any existing car
+    if (window.carMarker) {
+        map.removeLayer(window.carMarker);
+    }
+    
+    // Create simple car
+    const testCar = L.marker(testCoords[0]).addTo(map);
+    console.log('Test car created at:', testCoords[0]);
+    
+    let i = 0;
+    function moveTestCar() {
+        console.log('Moving test car to index:', i);
+        if (i < testCoords.length) {
+            testCar.setLatLng(testCoords[i]);
+            console.log('Test car moved to:', testCoords[i]);
+            i++;
+            setTimeout(moveTestCar, 1000);
+        } else {
+            console.log('Test animation complete');
+        }
+    }
+    
+    moveTestCar();
+};
 
 // Road network visualization for GPS-style navigation
 let roadNetworkLayer = null;
@@ -900,42 +1308,37 @@ let pathNetworkLayer = null;
 
 // Load and display road network from OpenStreetMap
 function loadRoadNetwork() {
-    console.log('Loading road network for GPS visualization...');
-    
-    // Remove existing road layers if they exist
-    if (roadNetworkLayer) {
-        map.removeLayer(roadNetworkLayer);
-    }
-    if (pathNetworkLayer) {
-        map.removeLayer(pathNetworkLayer);
+    if (!map) {
+        console.error('Map not initialized');
+        return;
     }
     
-    // Get current map bounds
+    // Get current map bounds (smaller area for faster loading)
     const bounds = map.getBounds();
     const bbox = `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`;
     
-    // Overpass API query to get roads, paths, and walkways
+    // Simplified query - only major roads for better performance
     const overpassQuery = `
-        [out:json][timeout:30];
+        [out:json][timeout:15];
         (
-            way["highway"~"^(motorway|trunk|primary|secondary|tertiary|residential|service)$"](${bbox});
-            way["highway"~"^(footway|path|track|pedestrian|cycleway)$"](${bbox});
+            way["highway"~"^(motorway|primary|secondary|residential)$"](${bbox});
         );
         out geom;
     `;
     
     const overpassUrl = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`;
     
+    console.log('Loading real Kenya roads from OpenStreetMap...');
+    
     fetch(overpassUrl)
         .then(response => response.json())
         .then(data => {
-            console.log('Road network data loaded:', data.elements.length, 'ways');
+            console.log('✅ Real roads loaded:', data.elements.length, 'ways');
             displayRoadNetwork(data.elements);
         })
         .catch(error => {
-            console.error('Error loading road network:', error);
-            // Fallback to sample roads
-            displaySampleRoadNetwork();
+            console.error('❌ Error loading roads:', error);
+            console.log('Roads will load when you zoom/pan the map');
         });
 }
 
@@ -950,216 +1353,22 @@ function displayRoadNetwork(ways) {
             const highwayType = way.tags.highway || 'road';
             const name = way.tags.name || 'Unnamed Road';
             
-            // Determine road category and styling
-            let roadStyle, layer;
-            
-            if (['motorway', 'trunk'].includes(highwayType)) {
-                // Major highways - thick blue lines
-                roadStyle = {
-                    color: '#4285F4',
-                    weight: 6,
-                    opacity: 0.8,
-                    smoothFactor: 2
-                };
-                layer = 'highway';
-            } else if (['primary', 'secondary'].includes(highwayType)) {
-                // Main roads - medium blue lines
-                roadStyle = {
-                    color: '#1967D2',
-                    weight: 4,
-                    opacity: 0.7,
-                    smoothFactor: 2
-                };
-                layer = 'main';
-            } else if (['tertiary', 'residential'].includes(highwayType)) {
-                // Local roads - thinner gray lines
-                roadStyle = {
-                    color: '#5F6368',
-                    weight: 3,
-                    opacity: 0.6,
-                    smoothFactor: 1.5
-                };
-                layer = 'local';
-            } else if (['service'].includes(highwayType)) {
-                // Service roads - thin gray lines
-                roadStyle = {
-                    color: '#9AA0A6',
-                    weight: 2,
-                    opacity: 0.5,
-                    smoothFactor: 1
-                };
-                layer = 'service';
-            } else if (['footway', 'path', 'track', 'pedestrian'].includes(highwayType)) {
-                // Walkways and paths - dashed green lines
-                roadStyle = {
-                    color: '#34A853',
-                    weight: 2,
-                    opacity: 0.7,
-                    dashArray: '5, 5',
-                    smoothFactor: 1
-                };
-                layer = 'path';
-            } else if (['cycleway'].includes(highwayType)) {
-                // Cycle paths - dashed orange lines
-                roadStyle = {
-                    color: '#FBBC04',
-                    weight: 2,
-                    opacity: 0.7,
-                    dashArray: '8, 4',
-                    smoothFactor: 1
-                };
-                layer = 'cycle';
+            let roadStyle;
+            if (highwayType === 'motorway') {
+                roadStyle = { color: '#4285F4', weight: 5, opacity: 0.8 };
+            } else if (highwayType === 'primary') {
+                roadStyle = { color: '#1967D2', weight: 3, opacity: 0.7 };
             } else {
-                // Default road styling
-                roadStyle = {
-                    color: '#80868B',
-                    weight: 2,
-                    opacity: 0.5,
-                    smoothFactor: 1
-                };
-                layer = 'default';
+                roadStyle = { color: '#5F6368', weight: 2, opacity: 0.6 };
             }
             
-            // Create polyline with appropriate styling
             const polyline = L.polyline(coords, roadStyle);
-            
-            // Add popup with road information
-            polyline.bindPopup(`
-                <div style="font-size: 12px;">
-                    <strong>${name}</strong><br>
-                    Type: ${highwayType}<br>
-                    <small>Click to highlight this route</small>
-                </div>
-            `);
-            
-            // Add hover effects
-            polyline.on('mouseover', function(e) {
-                this.setStyle({
-                    weight: parseInt(this.options.weight) + 2,
-                    opacity: 1
-                });
-            });
-            
-            polyline.on('mouseout', function(e) {
-                this.setStyle(roadStyle);
-            });
-            
-            // Add click to highlight functionality
-            polyline.on('click', function(e) {
-                highlightRoute(coords, name);
-            });
-            
-            // Separate roads from paths for layer management
-            if (['footway', 'path', 'track', 'pedestrian', 'cycleway'].includes(highwayType)) {
-                pathLines.push(polyline);
-            } else {
-                roadLines.push(polyline);
-            }
-        }
-    });
-    
-    // Create layer groups for better management
-    roadNetworkLayer = L.layerGroup(roadLines).addTo(map);
-    pathNetworkLayer = L.layerGroup(pathLines).addTo(map);
-    
-    console.log(`Displayed ${roadLines.length} roads and ${pathLines.length} paths`);
-}
-
-// Fallback sample road network for demo purposes
-function displaySampleRoadNetwork() {
-    console.log('Using sample road network for demonstration...');
-    
-    const sampleRoads = [
-        // Major highways around Nairobi
-        {
-            coords: [[-1.2864, 36.8172], [-1.2864, 36.8572], [-1.2864, 36.8972]],
-            style: { color: '#4285F4', weight: 6, opacity: 0.8 },
-            name: 'Thika Superhighway',
-            type: 'motorway'
-        },
-        {
-            coords: [[-1.2864, 36.8172], [-1.3264, 36.8172], [-1.3664, 36.8172]],
-            style: { color: '#4285F4', weight: 6, opacity: 0.8 },
-            name: 'Mombasa Road',
-            type: 'motorway'
-        },
-        {
-            coords: [[-1.2864, 36.8172], [-1.2464, 36.8172], [-1.2064, 36.8172]],
-            style: { color: '#1967D2', weight: 4, opacity: 0.7 },
-            name: 'Waiyaki Way',
-            type: 'primary'
-        },
-        {
-            coords: [[-1.2864, 36.8172], [-1.2864, 36.7772], [-1.2864, 36.7372]],
-            style: { color: '#1967D2', weight: 4, opacity: 0.7 },
-            name: 'Langata Road',
-            type: 'primary'
-        },
-        // Local roads
-        {
-            coords: [[-1.2664, 36.8372], [-1.2664, 36.8572], [-1.2664, 36.8772]],
-            style: { color: '#5F6368', weight: 3, opacity: 0.6 },
-            name: 'Kenyatta Avenue',
-            type: 'residential'
-        },
-        {
-            coords: [[-1.3064, 36.8372], [-1.3064, 36.8572], [-1.3064, 36.8772]],
-            style: { color: '#5F6368', weight: 3, opacity: 0.6 },
-            name: 'Moi Avenue',
-            type: 'residential'
-        },
-        // Walkways and paths
-        {
-            coords: [[-1.2764, 36.8272], [-1.2864, 36.8372], [-1.2964, 36.8472]],
-            style: { color: '#34A853', weight: 2, opacity: 0.7, dashArray: '5, 5' },
-            name: 'Pedestrian Walkway',
-            type: 'footway'
-        },
-        {
-            coords: [[-1.2864, 36.8072], [-1.2964, 36.8172], [-1.3064, 36.8272]],
-            style: { color: '#FBBC04', weight: 2, opacity: 0.7, dashArray: '8, 4' },
-            name: 'Cycle Path',
-            type: 'cycleway'
-        }
-    ];
-    
-    const roadLines = [];
-    const pathLines = [];
-    
-    sampleRoads.forEach(road => {
-        const polyline = L.polyline(road.coords, road.style);
-        
-        polyline.bindPopup(`
-            <div style="font-size: 12px;">
-                <strong>${road.name}</strong><br>
-                Type: ${road.type}<br>
-                <small>Sample road for demonstration</small>
-            </div>
-        `);
-        
-        // Add hover effects
-        polyline.on('mouseover', function(e) {
-            this.setStyle({
-                weight: parseInt(this.options.weight) + 2,
-                opacity: 1
-            });
-        });
-        
-        polyline.on('mouseout', function(e) {
-            this.setStyle(road.style);
-        });
-        
-        if (['footway', 'cycleway'].includes(road.type)) {
-            pathLines.push(polyline);
-        } else {
             roadLines.push(polyline);
         }
     });
     
     roadNetworkLayer = L.layerGroup(roadLines).addTo(map);
-    pathNetworkLayer = L.layerGroup(pathLines).addTo(map);
-    
-    console.log('Sample road network displayed');
+    console.log(`✅ Displayed ${roadLines.length} real Kenya roads`);
 }
 
 // Highlight a specific route for navigation
@@ -1316,425 +1525,181 @@ function startLocationTracking() {
                 });
             }
         }
-    }, 4000);
+    }, 1000);
 }
 
-// FIX #1 - Generate sample data if GeoJSON files aren't found
-function generateSampleData() {
-    console.log('Generating sample data for demonstration...');
+// Categorize facility type for filtering
+function categorizeFacility(type) {
+    const typeLower = type.toLowerCase();
     
-    const sampleFacilities = [];
-    
-    // Major cities in Kenya with coordinates
-    const cities = [
-        { name: 'Nairobi', lat: -1.2864, lng: 36.8172 },
-        { name: 'Mombasa', lat: -4.0435, lng: 39.6682 },
-        { name: 'Kisumu', lat: -0.1022, lng: 34.7617 },
-        { name: 'Nakuru', lat: -0.3031, lng: 36.0800 },
-        { name: 'Eldoret', lat: 0.5143, lng: 35.2698 },
-        { name: 'Thika', lat: -1.0396, lng: 37.0900 },
-        { name: 'Malindi', lat: -3.2192, lng: 40.1169 },
-        { name: 'Garissa', lat: -0.4569, lng: 39.6583 },
-        { name: 'Kitale', lat: 1.0167, lng: 35.0000 },
-        { name: 'Machakos', lat: -1.5167, lng: 37.2667 }
-    ];
-    
-    // Facility types by category
-    const facilityTypes = {
-        health: ['Hospital', 'Clinic', 'Pharmacy', 'Dental Clinic', 'Blood Bank'],
-        education: ['School', 'University', 'College', 'Library', 'Education Facility'],
-        transport: ['Airport'],
-        financial: ['Bank', 'ATM', 'Money Transfer', 'Post Office', 'Bureau de Change']
-    };
-    
-    // Generate 50 sample facilities
-    for (let i = 0; i < 47; i++) {  // Reduced to 47 to add specific Kasarani facilities
-        const city = cities[Math.floor(Math.random() * cities.length)];
-        const category = Object.keys(facilityTypes)[Math.floor(Math.random() * 4)];
-        const types = facilityTypes[category];
-        const type = types[Math.floor(Math.random() * types.length)];
-        
-        // Add slight random offset to coordinates
-        const latOffset = (Math.random() - 0.5) * 0.1;
-        const lngOffset = (Math.random() - 0.5) * 0.1;
-        
-        const facilityNames = {
-            'Hospital': ['Kenyatta National', 'Moi Teaching', 'Aga Khan', 'Nairobi', 'Coast General'],
-            'Clinic': ['City Medical', 'Family Health', 'Prime Care', 'Wellness', 'Community'],
-            'Pharmacy': ['Good Life', 'Health Plus', 'MediCare', 'Pharma Save', 'CarePoint'],
-            'School': ['Kenya High', 'Alliance', 'Starehe', 'Moi Girls', 'Lenana'],
-            'University': ['University of Nairobi', 'Kenyatta University', 'Strathmore', 'JKUAT', 'Moi University'],
-            'Bank': ['Equity Bank', 'KCB', 'Cooperative Bank', 'Stanbic', 'Absa'],
-            'ATM': ['Equity ATM', 'KCB ATM', 'Co-op ATM', 'Stanbic ATM', 'Absa ATM']
-        };
-        
-        let name = '';
-        if (facilityNames[type]) {
-            const names = facilityNames[type];
-            name = names[Math.floor(Math.random() * names.length)] + ' ' + type;
-        } else {
-            name = city.name + ' ' + type;
-        }
-        
-        sampleFacilities.push({
-            id: `sample_${category}_${i}`,
-            name: name,
-            type: type,
-            lat: city.lat + latOffset,
-            lng: city.lng + lngOffset,
-            county: city.name + ' County',
-            phone: '+254 7' + Math.floor(Math.random() * 10000000).toString().padStart(7, '0'),
-            hours: 'Mon-Fri: 8AM-5PM, Sat: 9AM-1PM',
-            rating: (3.5 + Math.random() * 1.5).toFixed(1),
-            category: category
-        });
+    if (typeLower.includes('hospital') || typeLower.includes('medical') || typeLower.includes('clinic')) {
+        return 'health';
+    } else if (typeLower.includes('church') || typeLower.includes('cathedral') || typeLower.includes('mosque') || typeLower.includes('temple')) {
+        return 'church';
+    } else if (typeLower.includes('bank') || typeLower.includes('financial') || typeLower.includes('atm')) {
+        return 'financial';
+    } else if (typeLower.includes('school') || typeLower.includes('university') || typeLower.includes('college') || typeLower.includes('education')) {
+        return 'education';
+    } else if (typeLower.includes('hotel') || typeLower.includes('lodge')) {
+        return 'hotel';
+    } else if (typeLower.includes('restaurant') || typeLower.includes('cafe') || typeLower.includes('bar')) {
+        return 'restaurant';
+    } else if (typeLower.includes('police') || typeLower.includes('station')) {
+        return 'police';
+    } else if (typeLower.includes('fire') || typeLower.includes('emergency')) {
+        return 'fire';
+    } else if (typeLower.includes('library')) {
+        return 'library';
+    } else if (typeLower.includes('park') || typeLower.includes('garden')) {
+        return 'park';
+    } else if (typeLower.includes('market') || typeLower.includes('mall')) {
+        return 'market';
+    } else if (typeLower.includes('airport')) {
+        return 'transport';
+    } else {
+        return 'poi';
     }
-    
-    // Add specific facilities in Kasarani
-    sampleFacilities.push({
-        id: 'kasarani_hospital_1',
-        name: 'Kasarani District Hospital',
-        type: 'Hospital',
-        lat: -1.2244,
-        lng: 36.9217,
-        county: 'Nairobi County',
-        phone: '+254 720123456',
-        hours: '24/7 Emergency Services',
-        rating: '4.2',
-        category: 'health'
-    });
-    
-    sampleFacilities.push({
-        id: 'kasarani_health_center_1',
-        name: 'Kasarani Health Center',
-        type: 'Clinic',
-        lat: -1.2254,
-        lng: 36.9227,
-        county: 'Nairobi County',
-        phone: '+254 723456789',
-        hours: 'Mon-Fri: 8AM-6PM',
-        rating: '4.0',
-        category: 'health'
-    });
-    
-    sampleFacilities.push({
-        id: 'kasarani_primary_1',
-        name: 'Kasarani Primary School',
-        type: 'School',
-        lat: -1.2264,
-        lng: 36.9237,
-        county: 'Nairobi County',
-        phone: '+254 734567890',
-        hours: 'Mon-Fri: 7AM-5PM',
-        rating: '3.9',
-        category: 'education'
-    });
-    
-    sampleFacilities.push({
-        id: 'kasarani_secondary_1',
-        name: 'Kasarani Secondary School',
-        type: 'School',
-        lat: -1.2274,
-        lng: 36.9247,
-        county: 'Nairobi County',
-        phone: '+254 745678901',
-        hours: 'Mon-Fri: 7AM-5PM',
-        rating: '4.1',
-        category: 'education'
-    });
-    
-    sampleFacilities.push({
-        id: 'kasarani_bank_1',
-        name: 'Kasarani Equity Bank',
-        type: 'Bank',
-        lat: -1.2234,
-        lng: 36.9207,
-        county: 'Nairobi County',
-        phone: '+254 756789012',
-        hours: 'Mon-Fri: 8AM-4PM, Sat: 9AM-12PM',
-        rating: '4.0',
-        category: 'financial'
-    });
-    
-    sampleFacilities.push({
-        id: 'kasarani_pharmacy_1',
-        name: 'Kasarani Pharmacy',
-        type: 'Pharmacy',
-        lat: -1.2284,
-        lng: 36.9257,
-        county: 'Nairobi County',
-        phone: '+254 767890123',
-        hours: 'Mon-Sat: 8AM-8PM',
-        rating: '4.3',
-        category: 'health'
-    });
-    
-    // Add a facility with Kasarani County to ensure it appears in county dropdown
-    sampleFacilities.push({
-        id: 'kasarani_county_office_1',
-        name: 'Kasarani County Office',
-        type: 'Education Facility',
-        lat: -1.2294,
-        lng: 36.9267,
-        county: 'Kasarani County',
-        phone: '+254 778901234',
-        hours: 'Mon-Fri: 8AM-5PM',
-        rating: '3.8',
-        category: 'education'
-    });
-    
-    return sampleFacilities;
 }
 
-// Load GeoJSON data with fallback to sample data
+// Load facilities from CSV - FINAL FIX
 async function loadFacilities() {
     try {
         console.log('Loading facilities...');
         
-        // Show loading indicator
-        showNotification('Loading facility data... This may take a moment.');
+        facilities = [];
         
-        // Try to load real data, fall back to sample if files don't exist
-        let healthData = null;
-        let educationData = null;
-        let airportsData = null;
-        let financialData = null;
-        let poiData = null;
+        // Load CSV
+        const response = await fetch('kenya_facilities.csv');
+        const csvText = await response.text();
+        const lines = csvText.split('\n');
         
-        try {
-            const healthResponse = await fetch('data/kenya_health.geojson');
-            if (healthResponse.ok) healthData = await healthResponse.json();
-        } catch (e) { console.log('Health data not found'); }
-        
-        try {
-            const educationResponse = await fetch('data/kenya_education.geojson');
-            if (educationResponse.ok) educationData = await educationResponse.json();
-        } catch (e) { console.log('Education data not found'); }
-        
-        try {
-            const airportsResponse = await fetch('data/kenya_airports.geojson');
-            if (airportsResponse.ok) airportsData = await airportsResponse.json();
-        } catch (e) { console.log('Airports data not found'); }
-        
-        try {
-            const financialResponse = await fetch('data/hotosm_ken_financial_services_points_geojson.geojson');
-            if (financialResponse.ok) financialData = await financialResponse.json();
-        } catch (e) { console.log('Financial data not found'); }
-        
-        try {
-            const poiResponse = await fetch('data/hotosm_ken_points_of_interest_points_geojson.geojson');
-            if (poiResponse.ok) poiData = await poiResponse.json();
-        } catch (e) { console.log('Points of interest data not found'); }
-        
-        // Check if we have any real data
-        const hasRealData = healthData || educationData || airportsData || financialData || poiData;
-        
-        if (!hasRealData) {
-            console.log('No GeoJSON files found, using sample data');
-            usingSampleData = true;
-            document.getElementById('sampleDataNotice').classList.add('show');
-            facilities = generateSampleData();
-            allFacilities = [...facilities]; // Copy all facilities for heatmap
-        } else {
-            // Process real data (existing code)
-            facilities = [];
+        // Parse all facilities
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
             
-            // Process health facilities if available
-            if (healthData && healthData.features) {
-                showNotification(`Loading ${healthData.features.length} health facilities...`);
-                
-                healthData.features.forEach((feature, index) => {
-                    if (feature.geometry && feature.geometry.coordinates) {
-                        const coords = feature.geometry.coordinates;
-                        const props = feature.properties;
-                        
-                        facilities.push({
-                            id: 'health_' + (props.fid || Math.random()),
-                            name: props.name || 'Unknown Health Facility',
-                            type: mapHealthType(props.amenity || props.healthcare),
-                            lat: coords[1],
-                            lng: coords[0],
-                            county: detectCounty(coords[1], coords[0], props['addr:city']),
-                            phone: props.phone || '',
-                            hours: props.opening_hours || '',
-                            rating: '4.0',
-                            category: 'health'
-                        });
-                    }
-                    
-                    // Update progress every 1000 facilities
-                    if (index % 1000 === 0) {
-                        showNotification(`Processed ${index}/${healthData.features.length} health facilities...`);
-                    }
-                });
-            }
+            const [id, name, type, lat, lng, county, address, phone, hours, rating, wheelchair] = line.split(',');
             
-            // Process education facilities if available (NOW USING ALL FACILITIES)
-            if (educationData && educationData.features) {
-                console.log('Processing ALL education facilities...');
-                showNotification(`Loading ${educationData.features.length} education facilities...`);
-                
-                educationData.features.forEach((feature, index) => {
-                    if (feature.geometry && feature.geometry.coordinates) {
-                        const coords = feature.geometry.coordinates;
-                        const props = feature.properties;
-                        
-                        facilities.push({
-                            id: 'education_' + (props.osm_id || Math.random()),
-                            name: props.name || 'Unknown Education Facility',
-                            type: mapEducationType(props.amenity),
-                            lat: coords[1],
-                            lng: coords[0],
-                            county: detectCounty(coords[1], coords[0], props['addr:city']),
-                            phone: props.phone || '',
-                            hours: props.opening_hours || '',
-                            rating: '4.0',
-                            category: 'education'
-                        });
-                    }
-                    
-                    // Update progress every 1000 facilities
-                    if (index % 1000 === 0) {
-                        showNotification(`Processed ${index}/${educationData.features.length} education facilities...`);
-                    }
+            if (lat && lng) {
+                facilities.push({
+                    id: id || i,
+                    name: name || 'Unknown',
+                    type: type || 'Facility',
+                    category: categorizeFacility(type || 'Facility'),
+                    lat: parseFloat(lat),
+                    lng: parseFloat(lng),
+                    county: county || 'Unknown',
+                    address: address || '',
+                    phone: phone || '',
+                    hours: hours || '',
+                    rating: parseFloat(rating) || 4.0
                 });
-                
-                console.log(`Processed ALL ${educationData.features.length} education facilities`);
-            }
-            
-            // Process airports if available
-            if (airportsData && airportsData.features) {
-                console.log('Processing airports...');
-                airportsData.features.forEach(feature => {
-                    if (feature.geometry && feature.geometry.coordinates) {
-                        const coords = feature.geometry.coordinates;
-                        const props = feature.properties;
-                        
-                        if ((props.aeroway === 'aerodrome' || props.aeroway === 'airport') && props.name) {
-                            facilities.push({
-                                id: 'airport_' + (props.osm_id || Math.random()),
-                                name: props.name || 'Unknown Airport',
-                                type: 'Airport',
-                                lat: coords[1],
-                                lng: coords[0],
-                                county: detectCounty(coords[1], coords[0], props['addr:city']),
-                                phone: props.phone || '',
-                                hours: '',
-                                rating: '4.0',
-                                category: 'transport'
-                            });
-                        }
-                    }
-                });
-            }
-            
-            // Process financial services if available
-            if (financialData && financialData.features) {
-                console.log('Processing financial services...');
-                financialData.features.forEach(feature => {
-                    if (feature.geometry && feature.geometry.coordinates) {
-                        const coords = feature.geometry.coordinates;
-                        const props = feature.properties;
-                        
-                        facilities.push({
-                            id: 'financial_' + (props.osm_id || Math.random()),
-                            name: props.name || `${mapFinancialType(props.amenity)}`,
-                            type: mapFinancialType(props.amenity),
-                            lat: coords[1],
-                            lng: coords[0],
-                            county: detectCounty(coords[1], coords[0], props['addr:city']),
-                            phone: props.phone || '',
-                            hours: props.opening_hours || '',
-                            rating: '4.0',
-                            category: 'financial'
-                        });
-                    }
-                });
-            }
-            
-            // Process points of interest if available (NOW USING ALL FACILITIES)
-            if (poiData && poiData.features) {
-                console.log('Processing ALL points of interest...');
-                showNotification(`Loading ${poiData.features.length} points of interest...`);
-                
-                poiData.features.forEach((feature, index) => {
-                    if (feature.geometry && feature.geometry.coordinates) {
-                        const coords = feature.geometry.coordinates;
-                        const props = feature.properties;
-                        
-                        // Only process POIs with names to reduce noise
-                        if (props.name && props.name.trim()) {
-                            // Special handling for churches - mark as important category
-                            const category = (props.amenity === 'place_of_worship') ? 'church' : 'poi';
-                            
-                            facilities.push({
-                                id: 'poi_' + (props.osm_id || index),
-                                name: props.name || 'Unknown Point of Interest',
-                                type: mapPOIType(props.tourism || props.amenity || props.shop),
-                                lat: coords[1],
-                                lng: coords[0],
-                                county: detectCounty(coords[1], coords[0], props['addr:city']),
-                                phone: props.phone || '',
-                                hours: props.opening_hours || '',
-                                rating: '4.0',
-                                category: category
-                            });
-                        }
-                    }
-                    
-                    // Update progress every 5000 POIs (since POI file is large)
-                    if (index % 5000 === 0) {
-                        showNotification(`Processed ${index}/${poiData.features.length} points of interest...`);
-                    }
-                });
-                
-                console.log(`Processed ALL ${poiData.features.length} points of interest`);
             }
         }
         
-        console.log(`Loaded ${facilities.length} facilities successfully`);
+        console.log(`Loaded ${facilities.length} facilities`);
         
-        // Copy all facilities for heatmap use
-        allFacilities = [...facilities];
-        
-        // Show completion notification
-        showNotification(`Loaded ${facilities.length} facilities successfully!`);
-        
-        // Use setTimeout to prevent UI blocking
-        setTimeout(() => {
-            if (facilities.length > 0) {
-                populateCountyDropdown();
-                setupCountySearch();
-                populateFacilityList();
-                updateMarkers();
-                fitMapToAllFacilities();
-                setupSearch(); // Initialize search after facilities are loaded
-                hideLoading();
-            } else {
-                console.error('No facilities found!');
-                alert('No facilities data available. Please check the data files.');
-                hideLoading();
-            }
-        }, 100); // 100ms delay to prevent UI blocking
+        // Update UI immediately
+        document.getElementById('facilityCountBadge').textContent = facilities.length;
+        updateMarkers();
+        populateCountyDropdown();
+        hideLoading();
         
     } catch (error) {
-        console.error('Error loading facilities:', error);
-        
-        // Fallback to sample data on error
-        console.log('Error loading data, using sample data');
-        usingSampleData = true;
-        document.getElementById('sampleDataNotice').classList.add('show');
-        facilities = generateSampleData();
-        allFacilities = [...facilities]; // Copy all facilities for heatmap
-        
-        populateCountyDropdown();
-        setupCountySearch();
-        populateFacilityList();
-        updateMarkers();
-        fitMapToAllFacilities();
-        setupSearch(); // Initialize search after facilities are loaded
+        console.error('Load error:', error);
         hideLoading();
     }
+}
+
+// Chunked rendering function for smooth performance
+function renderFacilitiesInChunks() {
+    const CHUNK_SIZE = 50; // Process 50 facilities at a time
+    let currentChunk = 0;
+    // ... (rest of the function remains the same)
+    
+    function processChunk() {
+        const start = currentChunk * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, facilities.length);
+        
+        if (start >= facilities.length) {
+            // All chunks processed
+            console.log('All facilities rendered');
+            return;
+        }
+        
+        // Process current chunk
+        const chunk = facilities.slice(start, end);
+        
+        // Update markers for this chunk
+        updateMarkersChunk(chunk);
+        
+        // Update facility list for this chunk (limited to 100 total)
+        if (start < 100) {
+            updateFacilityListChunk(chunk.slice(0, Math.min(chunk.length, 100 - start)));
+        }
+        
+        currentChunk++;
+        
+        // Process next chunk using requestAnimationFrame for smooth rendering
+        requestAnimationFrame(processChunk);
+    }
+    
+    // Start processing chunks
+    requestAnimationFrame(processChunk);
+}
+
+// Update markers for a chunk of facilities
+function updateMarkersChunk(chunk) {
+    if (!markerCluster) {
+        markerCluster = L.markerClusterGroup({
+            maxClusterRadius: 80,
+            spiderfyOnMaxZoom: false,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true
+        });
+        map.addLayer(markerCluster);
+    }
+    
+    chunk.forEach(facility => {
+        const icon = getFacilityIcon(facility.type);
+        const marker = L.marker([facility.lat, facility.lng], { icon: icon });
+        
+        marker.bindPopup(`
+            <div style="min-width: 180px;">
+                <h4 style="margin: 0 0 4px 0; color: #2c3e50; font-size: 14px;">${facility.name}</h4>
+                <p style="margin: 2px 0; font-size: 12px;"><strong>Type:</strong> ${facility.type}</p>
+                <p style="margin: 2px 0; font-size: 12px;"><strong>County:</strong> ${facility.county}</p>
+                ${facility.phone ? `<p style="margin: 2px 0; font-size: 12px;"><strong>Phone:</strong> ${facility.phone}</p>` : ''}
+                <button onclick="getDirections(${facility.lat}, ${facility.lng})" style="margin-top: 4px; padding: 4px 8px; background: #3498db; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 12px;">Directions</button>
+            </div>
+        `);
+        
+        marker.facilityData = facility;
+        markerCluster.addLayer(marker);
+        markers.push(marker);
+    });
+}
+
+// Update facility list for a chunk (limited to 100 total)
+function updateFacilityListChunk(chunk) {
+    const facilityList = document.getElementById('facilityList');
+    
+    // If this is the first chunk, create header
+    if (chunk[0] === facilities[0]) {
+        facilityList.innerHTML = `
+            <div style="padding: 10px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; margin-bottom: 10px; font-weight: bold; color: #5f6368;">
+                All Facilities (${Math.min(facilities.length, 100)} shown)
+            </div>
+        `;
+    }
+    
+    // Add chunk items
+    const fragment = document.createDocumentFragment();
+    chunk.forEach(facility => {
+        const item = createFacilityItem(facility);
+        fragment.appendChild(item);
+    });
+    facilityList.appendChild(fragment);
 }
 
 // Smart county detection based on coordinates
@@ -1744,6 +1709,23 @@ function detectCounty(lat, lng, fallbackCity = null) {
         return fallbackCity;
     }
     
+    // Precise GeoJSON-based lookup if boundary data is available
+    if (countyData && countyData.features) {
+        for (const feature of countyData.features) {
+            const name = feature.properties.name || feature.properties.COUNTY || feature.properties.COUNTY_NAM;
+            const geometry = feature.geometry;
+            const formattedName = name + (name.toLowerCase().includes('county') ? '' : ' County');
+            
+            if (geometry.type === 'Polygon') {
+                if (isPointInPolygon(lat, lng, geometry.coordinates[0])) return formattedName;
+            } else if (geometry.type === 'MultiPolygon') {
+                for (const poly of geometry.coordinates) {
+                    if (isPointInPolygon(lat, lng, poly[0])) return formattedName;
+                }
+            }
+        }
+    }
+
     // Kenya county boundaries (approximate)
     const counties = [
         { name: 'Nairobi', bounds: { north: -1.1, south: -1.4, east: 37.0, west: 36.6 } },
@@ -1907,55 +1889,88 @@ function setupCountySearch() {
     });
 }
 
-// Populate facility list
+// Populate facility list - Simple and normal
 function populateFacilityList() {
     const facilityList = document.getElementById('facilityList');
-    
     facilityList.innerHTML = '';
     
-    // Show ALL facilities initially, not filtered by dropdown values
-    let allFacilities = facilities;
+    // Get filter values
+    const county = document.getElementById('countySelect').value;
+    const facilityType = document.getElementById('facilityTypeSelect').value;
     
-    // Add header with total count
+    // Filter facilities
+    let filtered = facilities;
+    
+    if (county !== 'all') {
+        filtered = filtered.filter(f => f.county === county);
+    }
+    
+    if (facilityType !== 'all') {
+        filtered = filtered.filter(f => f.category === facilityType);
+    }
+    
+    // Add header with count
     const header = document.createElement('div');
     header.style.cssText = 'padding: 10px; background: #f8f9fa; border-bottom: 1px solid #dee2e6; margin-bottom: 10px; font-weight: bold; color: #5f6368;';
-    header.innerHTML = `📋 All Facilities (${allFacilities.length} total)`;
+    
+    let headerText = 'Facilities';
+    if (county !== 'all' && facilityType !== 'all') {
+        headerText = `${facilityType.charAt(0).toUpperCase() + facilityType.slice(1)} Facilities in ${county}`;
+    } else if (county !== 'all') {
+        headerText = `Facilities in ${county}`;
+    } else if (facilityType !== 'all') {
+        headerText = `${facilityType.charAt(0).toUpperCase() + facilityType.slice(1)} Facilities`;
+    }
+    
+    header.innerHTML = `${headerText} (${filtered.length} found)`;
     facilityList.appendChild(header);
     
-    // Sort by name
-    allFacilities.sort((a, b) => a.name.localeCompare(b.name));
+    // Sort and display (limit to 200 for performance)
+    filtered.sort((a, b) => a.name.localeCompare(b.name));
+    const toDisplay = filtered.slice(0, 200);
     
-    allFacilities.forEach(facility => {
-        const item = document.createElement('div');
-        item.className = 'facility-item';
-        item.innerHTML = `
-            <div style="display: flex; align-items: flex-start;">
-                <i class="fas fa-${getFacilityIconName(facility.type)}" style="color: ${facilityColors[facility.type] || '#5f6368'}; margin-right: 12px; font-size: 16px; width: 20px; text-align: center; margin-top: 2px;"></i>
-                <div style="flex: 1;">
-                    <div class="facility-name">${facility.name}</div>
-                    <div class="facility-info">
-                        <span class="facility-type"><i class="fas fa-tag"></i> ${facility.type}</span>
-                        <span><i class="fas fa-map-marker-alt"></i> ${facility.county}</span>
-                    </div>
-                    <div class="facility-info" style="margin-top: 4px;">
-                        <span><i class="fas fa-star star"></i> ${facility.rating}</span>
-                        ${facility.phone ? `<span><i class="fas fa-phone"></i> ${facility.phone}</span>` : ''}
-                    </div>
-                </div>
-            </div>
-        `;
-        item.addEventListener('click', () => {
-            map.setView([facility.lat, facility.lng], 15);
-            // Find and open the marker popup
-            markers.forEach(marker => {
-                if (marker.facilityData && marker.facilityData.id === facility.id) {
-                    marker.openPopup();
-                }
-            });
-        });
-        
+    toDisplay.forEach(facility => {
+        const item = createFacilityItem(facility);
         facilityList.appendChild(item);
     });
+}
+
+// Helper function to create facility item HTML
+function createFacilityItem(facility) {
+    const item = document.createElement('div');
+    item.className = 'facility-item';
+    
+    // Simplified HTML for better performance
+    item.innerHTML = `
+        <div style="display: flex; align-items: flex-start;">
+            <i class="fas fa-${getFacilityIconName(facility.type)}" style="color: ${facilityColors[facility.type] || '#5f6368'}; margin-right: 12px; font-size: 16px; width: 20px; text-align: center; margin-top: 2px;"></i>
+            <div style="flex: 1;">
+                <div class="facility-name">${facility.name}</div>
+                <div class="facility-info">
+                    <span class="facility-type"><i class="fas fa-tag"></i> ${facility.type}</span>
+                    <span><i class="fas fa-map-marker-alt"></i> ${facility.county}</span>
+                </div>
+                <div class="facility-info" style="margin-top: 4px;">
+                    <span><i class="fas fa-star star"></i> ${facility.rating}</span>
+                    ${facility.phone ? `<span><i class="fas fa-phone"></i> ${facility.phone}</span>` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add click handler with debouncing
+    item.addEventListener('click', () => {
+        requestAnimationFrame(() => {
+            map.setView([facility.lat, facility.lng], 15);
+            // Find and open marker popup (optimized search)
+            const marker = markers.find(m => m.facilityData && m.facilityData.id === facility.id);
+            if (marker) {
+                marker.openPopup();
+            }
+        });
+    });
+    
+    return item;
 }
 
 // Get facility icon - returns proper Leaflet divIcon
@@ -1974,44 +1989,74 @@ function getFacilityIcon(type) {
 // Get facility icon name for FontAwesome (used in lists)
 function getFacilityIconName(type) {
     const icons = {
+        // Health
         'Hospital': 'hospital',
         'Clinic': 'clinic-medical',
-        'Pharmacy': 'pills',
-        'Dental Clinic': 'tooth',
-        'Blood Bank': 'tint',
+        'Medical': 'clinic-medical',
+        'Health Facility': 'clinic-medical',
+        
+        // Education
         'School': 'graduation-cap',
         'University': 'university',
         'College': 'user-graduate',
-        'Library': 'book',
-        'Education Facility': 'school',
-        'Airport': 'plane',
-        'Health Facility': 'clinic-medical',
+        'Education': 'school',
+        
+        // Religious
+        'Church': 'church',
+        'Cathedral': 'church',
+        'Mosque': 'mosque',
+        'Temple': 'place-of-worship',
+        
+        // Financial
         'Bank': 'landmark',
         'ATM': 'credit-card',
-        'Money Transfer': 'money-bill-wave',
-        'Post Office': 'envelope',
-        'Bureau de Change': 'exchange-alt',
-        'Financial Service': 'hand-holding-usd'
+        'Financial': 'hand-holding-usd',
+        
+        // Hotels
+        'Hotel': 'bed',
+        'Lodge': 'house-chimney',
+        
+        // Food
+        'Restaurant': 'utensils',
+        'Cafe': 'coffee',
+        'Bar': 'beer',
+        
+        // Services
+        'Police Station': 'shield-alt',
+        'Fire Station': 'fire-extinguisher',
+        'Library': 'book',
+        
+        // Recreation
+        'Park': 'tree',
+        'Garden': 'leaf',
+        
+        // Shopping
+        'Market': 'shopping-cart',
+        'Mall': 'store',
+        
+        // Transport
+        'Airport': 'plane',
+        'Transport': 'route',
+        
+        // Default
+        'Facility': 'map-marker-alt',
+        'POI': 'map-marker-alt'
     };
     return icons[type] || 'map-marker-alt';
 }
 
-// Update markers - simple and direct - SHOW ALL FACILITIES
+// Update markers - Simple and normal
 function updateMarkers() {
     const county = document.getElementById('countySelect').value;
     const facilityType = document.getElementById('facilityTypeSelect').value;
     
-    // Use all loaded facilities - NO TEST DATA NEEDED
-    let facilitiesToUse = facilities.length > 0 ? facilities : [];
+    // Filter facilities
+    let filtered = facilities;
     
-    let filtered = facilitiesToUse;
-    
-    // Filter by county
     if (county !== 'all') {
         filtered = filtered.filter(f => f.county === county);
     }
     
-    // Filter by facility type
     if (facilityType !== 'all') {
         filtered = filtered.filter(f => f.category === facilityType);
     }
@@ -2019,79 +2064,159 @@ function updateMarkers() {
     // Clear existing markers
     if (markerCluster) {
         map.removeLayer(markerCluster);
+        markerCluster = null;
     }
-    
     markers = [];
     
-    // Create new marker cluster
-    markerCluster = L.markerClusterGroup({
-        maxClusterRadius: 50,
-        spiderfyOnMaxZoom: true,
-        showCoverageOnHover: false,
-        zoomToBoundsOnClick: true
-    });
-    
-    // Add markers for filtered facilities
-    filtered.forEach(facility => {
-        const icon = getFacilityIcon(facility.type);
-        const marker = L.marker([facility.lat, facility.lng], { icon: icon });
-        
-        marker.bindPopup(`
-            <div style="min-width: 200px;">
-                <h3 style="margin: 0 0 8px 0; color: #2c3e50;">${facility.name}</h3>
-                <p style="margin: 4px 0;"><strong>Type:</strong> ${facility.type}</p>
-                <p style="margin: 4px 0;"><strong>County:</strong> ${facility.county}</p>
-                <p style="margin: 4px 0;"><strong>Category:</strong> ${facility.category}</p>
-                ${facility.phone ? `<p style="margin: 4px 0;"><strong>Phone:</strong> ${facility.phone}</p>` : ''}
-                <button onclick="getDirections(${facility.lat}, ${facility.lng})" style="margin-top: 8px; padding: 6px 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer;">Get Directions</button>
-            </div>
-        `);
-        
-        marker.facilityData = facility;
-        markerCluster.addLayer(marker);
-        markers.push(marker);
-    });
-    
-    map.addLayer(markerCluster);
-    
-    // Show results count
-    showNotification(`Found ${filtered.length} facilities`);
-    
-    // Fit map to show results
+    // Create new cluster if we have facilities
     if (filtered.length > 0) {
-        const bounds = L.latLngBounds(filtered.map(f => [f.lat, f.lng]));
-        map.fitBounds(bounds.pad(0.1));
+        markerCluster = L.markerClusterGroup({
+            maxClusterRadius: 80,
+            spiderfyOnMaxZoom: false,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true
+        });
+        
+        // Add markers
+        filtered.forEach(facility => {
+            const icon = getFacilityIcon(facility.type);
+            const marker = L.marker([facility.lat, facility.lng], { icon: icon });
+            
+            marker.bindPopup(`
+                <div style="min-width: 180px;">
+                    <h4 style="margin: 0 0 4px 0; color: #2c3e50; font-size: 14px;">${facility.name}</h4>
+                    <p style="margin: 2px 0; font-size: 12px;"><strong>Type:</strong> ${facility.type}</p>
+                    <p style="margin: 2px 0; font-size: 12px;"><strong>County:</strong> ${facility.county}</p>
+                    ${facility.phone ? `<p style="margin: 2px 0; font-size: 12px;"><strong>Phone:</strong> ${facility.phone}</p>` : ''}
+                    <button onclick="getDirections(${facility.lat}, ${facility.lng})" style="margin-top: 4px; padding: 4px 8px; background: #3498db; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 12px;">Directions</button>
+                </div>
+            `);
+            
+            marker.facilityData = facility;
+            markerCluster.addLayer(marker);
+            markers.push(marker);
+        });
+        
+        map.addLayer(markerCluster);
+        
+        // Show notification
+        let notificationText = `Found ${filtered.length} facilities`;
+        if (county !== 'all' && facilityType !== 'all') {
+            notificationText = `Found ${filtered.length} ${facilityType} facilities in ${county}`;
+        } else if (county !== 'all') {
+            notificationText = `Found ${filtered.length} facilities in ${county}`;
+        } else if (facilityType !== 'all') {
+            notificationText = `Found ${filtered.length} ${facilityType} facilities`;
+        }
+        showNotification(notificationText);
+        
+        // Fit map to show results
+        if (filtered.length > 0) {
+            const bounds = L.latLngBounds(filtered.map(f => [f.lat, f.lng]));
+            map.fitBounds(bounds.pad(0.1));
+        }
+    } else {
+        showNotification('No facilities found for selected filters');
     }
 }
 
-// Fit map to show all facilities
-function fitMapToAllFacilities() {
-    if (facilities.length > 0) {
-        const allMarkers = facilities.map(f => [f.lat, f.lng]);
-        const bounds = L.latLngBounds(allMarkers);
-        map.fitBounds(bounds.pad(0.1));
+// Render filtered markers in chunks for smooth performance
+function renderFilteredMarkersInChunks(facilitiesToShow, totalCount, county, facilityType) {
+    const CHUNK_SIZE = 50;
+    let currentChunk = 0;
+    
+    function processChunk() {
+        const start = currentChunk * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, facilitiesToShow.length);
+        
+        if (start >= facilitiesToShow.length) {
+            // All chunks processed - finalize
+            map.addLayer(markerCluster);
+            
+            // Show results count
+            let notificationText = `Found ${totalCount} facilities`;
+            if (totalCount > facilitiesToShow.length) {
+                notificationText += ` (showing first ${facilitiesToShow.length})`;
+            }
+            if (county !== 'all' && facilityType !== 'all') {
+                notificationText = `Found ${totalCount} ${facilityType} facilities in ${county}`;
+                if (totalCount > facilitiesToShow.length) {
+                    notificationText += ` (showing first ${facilitiesToShow.length})`;
+                }
+            } else if (county !== 'all') {
+                notificationText = `Found ${totalCount} facilities in ${county}`;
+                if (totalCount > facilitiesToShow.length) {
+                    notificationText += ` (showing first ${facilitiesToShow.length})`;
+                }
+            } else if (facilityType !== 'all') {
+                notificationText = `Found ${totalCount} ${facilityType} facilities`;
+                if (totalCount > facilitiesToShow.length) {
+                    notificationText += ` (showing first ${facilitiesToShow.length})`;
+                }
+            }
+            showNotification(notificationText);
+            
+            // Fit map to show results
+            if (facilitiesToShow.length > 0) {
+                const bounds = L.latLngBounds(facilitiesToShow.map(f => [f.lat, f.lng]));
+                map.fitBounds(bounds.pad(0.1));
+            }
+            return;
+        }
+        
+        // Process current chunk
+        const chunk = facilitiesToShow.slice(start, end);
+        chunk.forEach(facility => {
+            const icon = getFacilityIcon(facility.type);
+            const marker = L.marker([facility.lat, facility.lng], { icon: icon });
+            
+            marker.bindPopup(`
+                <div style="min-width: 180px;">
+                    <h4 style="margin: 0 0 4px 0; color: #2c3e50; font-size: 14px;">${facility.name}</h4>
+                    <p style="margin: 2px 0; font-size: 12px;"><strong>Type:</strong> ${facility.type}</p>
+                    <p style="margin: 2px 0; font-size: 12px;"><strong>County:</strong> ${facility.county}</p>
+                    ${facility.phone ? `<p style="margin: 2px 0; font-size: 12px;"><strong>Phone:</strong> ${facility.phone}</p>` : ''}
+                    <button onclick="getDirections(${facility.lat}, ${facility.lng})" style="margin-top: 4px; padding: 4px 8px; background: #3498db; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 12px;">Directions</button>
+                </div>
+            `);
+            
+            marker.facilityData = facility;
+            markerCluster.addLayer(marker);
+            markers.push(marker);
+        });
+        
+        currentChunk++;
+        
+        // Process next chunk using requestAnimationFrame
+        requestAnimationFrame(processChunk);
     }
+    
+    // Start processing chunks
+    requestAnimationFrame(processChunk);
 }
 
-// Fit map to filtered facilities
-function fitMapToFilteredFacilities() {
-    const county = document.getElementById('countySelect').value;
-    
-    let filtered = facilities;
-    if (county !== 'all') {
-        filtered = filtered.filter(f => f.county === county);
-    }
-    
-    if (filtered.length > 0) {
-        const filteredMarkers = filtered.map(f => [f.lat, f.lng]);
-        const bounds = L.latLngBounds(filteredMarkers);
-        map.fitBounds(bounds.pad(0.1));
+// Show loading
+function showLoading(show = true) {
+    const loading = document.getElementById('loading');
+    if (loading) {
+        loading.style.display = show ? 'flex' : 'none';
     }
 }
 
 // Hide loading
 function hideLoading() {
-    document.getElementById('loading').style.display = 'none';
+    const loading = document.getElementById('loading');
+    if (loading) {
+        loading.style.display = 'none';
+    }
+}
+
+// Get directions function
+window.getDirections = function(lat, lng) {
+    const facility = facilities.find(f => f.lat === lat && f.lng === lng);
+    if (facility) {
+        showDirectionsFromPopup(lat, lng, facility.name, facility.type);
+    }
 }
 
 // FIX #3 & #5 - Show directions with proper panel and animation
@@ -2363,15 +2488,15 @@ function calculateAndShowRoute(fromLat, fromLng, toLat, toLng, facilityName) {
         }
     });
     
-    // Create real road route using OSRM (Open Source Routing Machine)
+    // Create real road route using OSRM (Open Source Routing Machine) with enhanced road following
     try {
         // OSRM API expects [longitude, latitude] order
-        // Using shortest route optimization with additional parameters for better accuracy
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson&steps=true&alternatives=false&continue_straight=false`;
-        console.log('OSRM URL for shortest route:', osrmUrl);
-        console.log('Calculating shortest route from:', [fromLat, fromLng], 'to:', [toLat, toLng]);
+        // Get detailed road geometry with step-by-step coordinates for real road following
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson&steps=true&alternatives=false`;
+        console.log('OSRM URL for REAL ROAD route:', osrmUrl);
+        console.log('Calculating ACTUAL ROAD route from:', [fromLat, fromLng], 'to:', [toLat, toLng]);
         
-        showNotification('Calculating shortest route...');
+        showNotification('Calculating real road route...');
         
         fetch(osrmUrl)
             .then(response => {
@@ -2386,7 +2511,41 @@ function calculateAndShowRoute(fromLat, fromLng, toLat, toLng, facilityName) {
                 
                 if (data.routes && data.routes.length > 0) {
                     const route = data.routes[0];
-                    const coordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]); // Convert to [lat, lng] for Leaflet
+                    
+                    // Extract DETAILED road coordinates from OSRM steps for REAL road following
+                    let roadCoordinates = [];
+                    
+                    // Get detailed coordinates from each step's geometry
+                    if (route.legs && route.legs[0] && route.legs[0].steps) {
+                        route.legs[0].steps.forEach(step => {
+                            if (step.geometry && step.geometry.coordinates) {
+                                const stepCoords = step.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                                roadCoordinates = roadCoordinates.concat(stepCoords);
+                            }
+                        });
+                    }
+                    
+                    // Fallback to route geometry if no step details
+                    if (roadCoordinates.length === 0) {
+                        roadCoordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                    }
+                    
+                    // Remove duplicate consecutive coordinates to prevent backward movement
+                    const uniqueCoordinates = [];
+                    let lastCoord = null;
+                    for (const coord of roadCoordinates) {
+                        if (!lastCoord || 
+                            Math.abs(coord[0] - lastCoord[0]) > 0.00001 || 
+                            Math.abs(coord[1] - lastCoord[1]) > 0.00001) {
+                            uniqueCoordinates.push(coord);
+                            lastCoord = coord;
+                        }
+                    }
+                    
+                    const coordinates = uniqueCoordinates;
+                    
+                    console.log('DETAILED road coordinates:', coordinates.length, 'points');
+                    console.log('Route follows ACTUAL ROAD GEOMETRY with', coordinates.length, 'waypoints');
                     
                     // Log route details for verification
                     console.log('=== SHORTEST ROUTE FOUND ===');
@@ -2412,13 +2571,15 @@ function calculateAndShowRoute(fromLat, fromLng, toLat, toLng, facilityName) {
                         }
                     }
                     
-                    // Create route line with real road coordinates
+                    // Create route line showing ACTUAL ROAD GEOMETRY
                     const routeLine = L.polyline(coordinates, {
                         color: '#4285F4',
-                        weight: 6,
-                        opacity: 0.8,
-                        dashArray: '10, 10'
+                        weight: 5,
+                        opacity: 0.9,
+                        smoothFactor: 0.1 // Minimal smoothing to show real road curves
                     }).addTo(map);
+                    
+                    console.log('ACTUAL ROAD route displayed with', coordinates.length, 'detailed points');
                     
                     // Add start and end markers
                     const startIcon = L.divIcon({
@@ -2466,23 +2627,32 @@ function calculateAndShowRoute(fromLat, fromLng, toLat, toLng, facilityName) {
                     
                     directionsHTML += `
                         <div class="direction-step">
-                            <div class="step-icon"><i class="fas fa-flag-checkered"></i></div>
+                            <div class="step-icon"><i class="fas fa-road"></i></div>
                             <div>
-                                <div class="step-text">Route calculated successfully</div>
-                                <div class="step-distance">${(route.distance / 1000).toFixed(1)} km total</div>
+                                <div class="step-text">ACTUAL ROAD route calculated</div>
+                                <div class="step-distance">${(route.distance / 1000).toFixed(1)} km following real roads</div>
                             </div>
                         </div>
-                        <div style="padding: 8px; background: #e8f0fe; border-radius: 6px; text-align: center;">
-                            <i class="fas fa-car" style="color: #4285F4; margin-right: 8px;"></i>
-                            <span style="color: #4285F4; font-size: 14px;">Car animation starting...</span>
-                            <button onclick="speakNavigation('Test voice navigation. This is a test of the turn by turn directions system.', true)" 
-                                    style="margin-left: 10px; padding: 4px 8px; background: #4285F4; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                        <div style="padding: 10px; background: #e8f5e8; border-radius: 6px; text-align: center; border: 2px solid #4CAF50;">
+                            <i class="fas fa-route" style="color: #2e7d32; margin-right: 8px;"></i>
+                            <span style="color: #2e7d32; font-size: 14px; font-weight: bold;">Following ACTUAL ROAD GEOMETRY</span>
+                            <div style="margin-top: 5px; font-size: 12px; color: #2e7d32;">
+                                ${coordinates.length} detailed road points - follows every turn and curve
+                            </div>
+                            <button onclick="speakNavigation('Following actual road geometry.', true)" 
+                                    style="margin-left: 10px; padding: 4px 8px; background: #2e7d32; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer;">
                                 Test Voice
                             </button>
                         </div>
                     `;
                     
                     document.getElementById('directionsRoute').innerHTML = directionsHTML;
+                    
+                    // Start car animation with real turn-by-turn directions
+                    if (coordinates && coordinates.length > 1) {
+                        const routeSteps = route.legs && route.legs[0] ? route.legs[0].steps : [];
+                        animateGPSRoute(coordinates, routeSteps);
+                    }
                     
                     // Show success notification with shortest route confirmation
                     showNotification(`Shortest route found: ${(route.distance / 1000).toFixed(1)} km, ${Math.round(route.duration / 60)} minutes`);
@@ -2500,16 +2670,7 @@ function calculateAndShowRoute(fromLat, fromLng, toLat, toLng, facilityName) {
                         optimization: 'shortest'
                     });
                     
-                    // Start car animation along the shortest route with delay
-                    setTimeout(() => {
-                        // Test with a simple route first
-                        if (coordinates && coordinates.length > 1) {
-                            animateCarAlongRealRoute(coordinates, route.legs[0].steps);
-                        } else {
-                            console.error('No valid coordinates for animation');
-                        }
-                    }, 1500); // Start animation after 1.5 seconds
-                    
+                    // Car animation already started above with animateGPSRoute
                     // Close directions panel after route is displayed
                     setTimeout(() => {
                         const panel = document.getElementById('directionsPanel');
@@ -2679,325 +2840,13 @@ function createFallbackRoute(fromLat, fromLng, toLat, toLng, facilityName) {
     const bounds = L.latLngBounds(coordinates);
     map.fitBounds(bounds.pad(0.1));
     
-    // Automatically start car animation for fallback route
-    setTimeout(() => {
-        console.log('Auto-starting fallback car animation...');
-        console.log('Fallback coordinates:', coordinates);
-        animateCarAlongRealRoute(coordinates);
-    }, 1500);
+    // Fallback route displayed - car animation handled by main function
 }
 
-// Animate car along real road route
-function animateCarAlongRealRoute(coordinates, routeSteps = []) {
-    console.log('Animating car along real roads...');
-    console.log('Coordinates length:', coordinates.length);
-    console.log('Route steps:', routeSteps);
-    console.log('First coordinate:', coordinates[0]);
-    console.log('Last coordinate:', coordinates[coordinates.length - 1]);
-    
-    if (!coordinates || coordinates.length < 2) {
-        console.error('Invalid coordinates for animation');
-        return;
-    }
-    
-    // Remove existing car marker if any
-    if (window.carMarker) {
-        map.removeLayer(window.carMarker);
-    }
-    
-    // Create more visible car icon
-    const carIcon = L.divIcon({
-        className: 'car-marker',
-        html: '<div style="background: #FF5722; border: 3px solid white; border-radius: 4px; width: 30px; height: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.6); z-index: 10000; position: relative;"><i class="fas fa-car" style="color: white; font-size: 12px;"></i></div>',
-        iconSize: [30, 20],
-        iconAnchor: [15, 10]
-    });
-    
-    // Create car marker at start position
-    window.carMarker = L.marker(coordinates[0], { icon: carIcon }).addTo(map);
-    
-    // Add a pulsing effect to make it more visible
-    const pulseIcon = L.divIcon({
-        className: 'car-pulse',
-        html: '<div style="background: rgba(255, 87, 34, 0.3); border: 2px solid #FF5722; border-radius: 50%; width: 40px; height: 40px; position: absolute; animation: pulse 2s infinite;"></div>',
-        iconSize: [40, 40],
-        iconAnchor: [20, 20]
-    });
-    
-    L.marker(coordinates[0], { icon: pulseIcon }).addTo(map);
-    
-    // Animate car along the route coordinates
-    let currentIndex = 0;
-    let totalDistance = 0;
-    let segmentDistances = [];
-    
-    // Calculate total distance and segment distances
-    for (let i = 0; i < coordinates.length - 1; i++) {
-        const dist = calculateDistance(
-            coordinates[i][0], coordinates[i][1],
-            coordinates[i + 1][0], coordinates[i + 1][1]
-        );
-        segmentDistances.push(dist);
-        totalDistance += dist;
-    }
-    
-    console.log('Total route distance:', totalDistance.toFixed(2), 'meters');
-    
-    // Set realistic speed (e.g., 40 km/h = 11.11 m/s for city driving)
-    const averageSpeed = 11.11; // meters per second
-    const totalDuration = totalDistance / averageSpeed; // seconds
-    const totalAnimationTime = totalDuration * 1000; // convert to milliseconds
-    
-    console.log('Estimated travel time:', (totalDuration / 60).toFixed(1), 'minutes');
-    
-    // Calculate timing for each segment
-    let animationSpeed = 100; // default fallback
-    if (totalAnimationTime > 0 && coordinates.length > 1) {
-        animationSpeed = totalAnimationTime / coordinates.length;
-    }
-    
-    // Ensure minimum and maximum animation speeds for visibility
-    animationSpeed = Math.max(200, Math.min(animationSpeed, 2000)); // between 200ms and 2s per move
-    
-    console.log('Animation speed per segment:', animationSpeed.toFixed(0), 'ms');
-    
-    let voiceInstructionsGiven = new Set(); // Track which instructions have been given
-    let currentStepIndex = 0;
-    let animationStartTime = Date.now();
-    
-    // Start navigation with initial announcement
-    setTimeout(() => {
-        speakNavigation("Starting navigation. Follow my voice instructions.", true);
-        
-        // Announce first instruction if available (with longer delay to prevent overlap)
-        if (routeSteps.length > 0) {
-            console.log('Route steps available:', routeSteps.length);
-            console.log('First step details:', JSON.stringify(routeSteps[0], null, 2));
-            
-            if (routeSteps[0].maneuver && routeSteps[0].maneuver.instruction) {
-                let firstInstruction = cleanInstruction(routeSteps[0].maneuver.instruction);
-                console.log('First instruction:', firstInstruction);
-                
-                // Enhance with landmark if we have starting coordinates
-                if (coordinates && coordinates.length > 0) {
-                    firstInstruction = enhanceInstructionWithLandmark(firstInstruction, coordinates[0][0], coordinates[0][1]);
-                }
-                
-                setTimeout(() => {
-                    speakNavigation(firstInstruction, false); // Use non-priority to allow queue
-                }, 3000); // Increased delay to prevent overlap
-            } else {
-                console.log('No instruction in first step, checking other properties');
-                console.log('Step maneuver:', routeSteps[0].maneuver);
-                console.log('All step properties:', Object.keys(routeSteps[0]));
-                
-                // Try to construct an instruction from maneuver type
-                if (routeSteps[0].maneuver && routeSteps[0].maneuver.type) {
-                    const maneuverType = routeSteps[0].maneuver.type;
-                    let constructedInstruction = constructInstructionFromManeuver(maneuverType, routeSteps[0]);
-                    console.log('Constructed instruction:', constructedInstruction);
-                    
-                    // Enhance with landmark if we have starting coordinates
-                    if (coordinates && coordinates.length > 0) {
-                        constructedInstruction = enhanceInstructionWithLandmark(constructedInstruction, coordinates[0][0], coordinates[0][1]);
-                    }
-                    
-                    setTimeout(() => {
-                        speakNavigation(constructedInstruction, false); // Use non-priority
-                    }, 3000);
-                } else {
-                    console.log('No maneuver type, using fallback');
-                    let fallbackInstruction = "Head towards your destination";
-                    
-                    // Enhance with landmark if we have starting coordinates
-                    if (coordinates && coordinates.length > 0) {
-                        fallbackInstruction = enhanceInstructionWithLandmark(fallbackInstruction, coordinates[0][0], coordinates[0][1]);
-                    }
-                    
-                    setTimeout(() => {
-                        speakNavigation(fallbackInstruction, false); // Use non-priority
-                    }, 3000);
-                }
-            }
-        } else {
-            console.log('No route steps available, using general navigation');
-        }
-    }, 1000);
-    
-    const animate = () => {
-        if (currentIndex < coordinates.length - 1) {
-            currentIndex++;
-            const nextCoord = coordinates[currentIndex];
-            const progress = currentIndex / coordinates.length;
-            
-            // Update car position
-            window.carMarker.setLatLng(nextCoord);
-            
-            // Update pulse position
-            if (window.pulseMarker) {
-                window.pulseMarker.setLatLng(nextCoord);
-            }
-            
-            // Calculate dynamic timing based on segment distance
-            let segmentTiming = animationSpeed;
-            if (currentIndex < segmentDistances.length) {
-                const segmentDistance = segmentDistances[currentIndex - 1] || 0;
-                // Adjust timing based on segment distance (longer segments take more time)
-                const timingFactor = Math.max(0.5, Math.min(2.0, segmentDistance / 50)); // scale factor based on 50m reference
-                segmentTiming = animationSpeed * timingFactor;
-            }
-            
-            // Check if we should announce the next turn instruction
-            if (routeSteps.length > 0 && currentStepIndex < routeSteps.length) {
-                const currentStep = routeSteps[currentStepIndex];
-                
-                // Calculate progress through current step
-                const stepStartProgress = currentStepIndex / routeSteps.length;
-                const stepEndProgress = (currentStepIndex + 1) / routeSteps.length;
-                const stepProgress = (progress - stepStartProgress) / (stepEndProgress - stepStartProgress);
-                
-                // Announce instruction when we're 70% through the current step (preparing for next turn)
-                if (stepProgress >= 0.7 && !voiceInstructionsGiven.has(currentStepIndex)) {
-                    console.log('Announcing step', currentStepIndex, ':', JSON.stringify(currentStep, null, 2));
-                    
-                    let instruction = '';
-                    
-                    // Try to get actual instruction first
-                    if (currentStep.maneuver && currentStep.maneuver.instruction) {
-                        instruction = cleanInstruction(currentStep.maneuver.instruction);
-                        console.log('Using actual instruction:', instruction);
-                    } else if (currentStep.maneuver && currentStep.maneuver.type) {
-                        // Construct instruction from maneuver type
-                        instruction = constructInstructionFromManeuver(currentStep.maneuver.type, currentStep);
-                        console.log('Constructed instruction:', instruction);
-                    } else {
-                        // Generic fallback
-                        instruction = "Continue following the route";
-                        console.log('Using generic instruction');
-                    }
-                    
-                    // Enhance instruction with landmark if we have current position
-                    if (nextCoord && coordinates[currentIndex]) {
-                        instruction = enhanceInstructionWithLandmark(instruction, nextCoord[0], nextCoord[1]);
-                    }
-                    
-                    if (instruction && instruction !== 'Continue following the route') {
-                        speakNavigation(instruction, false); // Use non-priority to allow proper queuing
-                        voiceInstructionsGiven.add(currentStepIndex);
-                        currentStepIndex++;
-                    } else {
-                        console.log('Skipping empty or generic instruction for step', currentStepIndex);
-                        voiceInstructionsGiven.add(currentStepIndex);
-                        currentStepIndex++;
-                    }
-                }
-            }
-            
-            // Progress announcements for longer routes
-            if (routeSteps.length === 0) { // Only for fallback routes without steps
-                if (progress === 0.25 && !voiceInstructionsGiven.has('quarter')) {
-                    let quarterMessage = "Quarter way there. Continue following the route.";
-                    
-                    // Enhance with landmark if we have current position
-                    if (nextCoord) {
-                        quarterMessage = enhanceInstructionWithLandmark(quarterMessage, nextCoord[0], nextCoord[1]);
-                    }
-                    
-                    speakNavigation(quarterMessage, false);
-                    voiceInstructionsGiven.add('quarter');
-                } else if (progress === 0.5 && !voiceInstructionsGiven.has('half')) {
-                    let halfMessage = "Halfway to your destination.";
-                    
-                    // Enhance with landmark if we have current position
-                    if (nextCoord) {
-                        halfMessage = enhanceInstructionWithLandmark(halfMessage, nextCoord[0], nextCoord[1]);
-                    }
-                    
-                    speakNavigation(halfMessage, false);
-                    voiceInstructionsGiven.add('half');
-                } else if (progress === 0.75 && !voiceInstructionsGiven.has('threequarters')) {
-                    let threequartersMessage = "Almost there. Just a quarter left to go.";
-                    
-                    // Enhance with landmark if we have current position
-                    if (nextCoord) {
-                        threequartersMessage = enhanceInstructionWithLandmark(threequartersMessage, nextCoord[0], nextCoord[1]);
-                    }
-                    
-                    speakNavigation(threequartersMessage, false);
-                    voiceInstructionsGiven.add('threequarters');
-                }
-            }
-            
-            // Log progress every 10 moves
-            if (currentIndex % 10 === 0) {
-                console.log(`Car progress: ${currentIndex}/${coordinates.length} - Position: ${nextCoord} - Segment timing: ${segmentTiming.toFixed(0)}ms`);
-            }
-            
-            setTimeout(animate, segmentTiming);
-        } else {
-            // Animation complete
-            console.log('Car animation completed!');
-            
-            // Arrival announcement with landmark
-            setTimeout(() => {
-                let arrivalMessage = "You have arrived at your destination!";
-                
-                // Enhance with landmark if we have final coordinates
-                if (coordinates && coordinates.length > 0) {
-                    const finalCoord = coordinates[coordinates.length - 1];
-                    arrivalMessage = enhanceInstructionWithLandmark(arrivalMessage, finalCoord[0], finalCoord[1]);
-                }
-                
-                speakNavigation(arrivalMessage, false);
-            }, 500);
-            
-            // Visual notification instead of alert
-            setTimeout(() => {
-                const notification = document.createElement('div');
-                notification.style.cssText = `
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: #4CAF50;
-                    color: white;
-                    padding: 20px 30px;
-                    border-radius: 10px;
-                    font-size: 18px;
-                    font-weight: bold;
-                    z-index: 10000;
-                    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-                    animation: slideIn 0.3s ease;
-                `;
-                notification.innerHTML = '<i class="fas fa-check-circle"></i> You have arrived!';
-                document.body.appendChild(notification);
-                
-                // Remove notification after 3 seconds
-                setTimeout(() => {
-                    notification.remove();
-                }, 3000);
-            }, 1000);
-        }
-    };
-    
-    // Add CSS animation for pulse effect
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.5); opacity: 0.5; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        @keyframes slideIn {
-            from { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
-            to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-        }
-    `;
-    document.head.appendChild(style);
-    
-    // Start animation
-    console.log('Starting car animation with turn-by-turn navigation...');
-    animate();
+// Old car animation function - DEPRECATED, use animateGPSRoute instead
+function animateCarAlongRealRoute_DEPRECATED(coordinates, routeSteps = []) {
+    console.warn('animateCarAlongRealRoute is deprecated, use animateGPSRoute instead');
+    return; // Disabled to prevent conflicts with animateGPSRoute
 }
 
 // Clean up instruction text for better speech
@@ -3112,243 +2961,82 @@ function calculateBearing(lat1, lon1, lat2, lon2) {
     return (brng + 360) % 360;
 }
 
-// FIX #4 - Implement search functionality with aggressive debouncing
+// Simple search function
 function setupSearch() {
-    // Prevent duplicate initialization
-    if (searchInitialized) {
-        console.log('Search already initialized, skipping...');
-        return;
-    }
-    
     const searchBox = document.getElementById('searchBox');
     const searchResults = document.getElementById('searchResults');
     
-    if (!searchBox || !searchResults) {
-        console.error('Search elements not found!');
-        return;
-    }
+    if (!searchBox || !searchResults) return;
     
     let searchTimeout;
-    let isTyping = false;
-    let typingTimeout;
     
-    console.log('Setting up search functionality...');
-    
-    // Immediately hide any existing results
-    searchResults.classList.remove('show');
-    
-    // Remove any existing event listeners to prevent duplicates
-    const newSearchBox = searchBox.cloneNode(true);
-    searchBox.parentNode.replaceChild(newSearchBox, searchBox);
-    
-    newSearchBox.addEventListener('focus', function() {
-        console.log('Search box focused');
-        isTyping = true;
-        searchResults.classList.remove('show');
-    });
-    
-    newSearchBox.addEventListener('blur', function() {
-        console.log('Search box blurred');
-        isTyping = false;
-        clearTimeout(typingTimeout);
-        typingTimeout = setTimeout(() => {
-            if (!isTyping) {
-                searchResults.classList.remove('show');
-            }
-        }, 200);
-    });
-    
-    newSearchBox.addEventListener('input', function(e) {
-        const query = e.target.value.toLowerCase().trim();
-        console.log('Search input triggered:', query, 'length:', query.length);
-        
-        // Mark as typing
-        isTyping = true;
-        
-        // Clear any existing timeouts
+    searchBox.addEventListener('input', function(e) {
         clearTimeout(searchTimeout);
-        clearTimeout(typingTimeout);
-        
-        // Always hide results immediately when typing
-        searchResults.classList.remove('show');
+        const query = e.target.value.toLowerCase().trim();
         
         if (query.length < 3) {
-            console.log('Query too short, hiding results');
+            searchResults.classList.remove('show');
             return;
         }
         
-        console.log('Setting up search timeout for:', query);
-        
-        // Wait for typing to stop
-        typingTimeout = setTimeout(() => {
-            isTyping = false;
-        }, 300);
-        
-        // Debounce search - wait 800ms after user stops typing
         searchTimeout = setTimeout(() => {
-            if (!isTyping) {
-                console.log('Performing search for:', query);
-                performSearch(query, searchResults, newSearchBox);
-            } else {
-                console.log('Still typing, cancelling search');
-            }
-        }, 800);
+            performSearch(query, searchResults, searchBox);
+        }, 300);
     });
     
-    // Prevent clicks on results while typing
-    newSearchBox.addEventListener('keydown', function(e) {
-        isTyping = true;
-        searchResults.classList.remove('show');
-    });
-    
-    // Close search results when clicking outside
+    // Close results when clicking outside
     document.addEventListener('click', function(e) {
-        if (!newSearchBox.contains(e.target) && !searchResults.contains(e.target)) {
+        if (!searchBox.contains(e.target) && !searchResults.contains(e.target)) {
             searchResults.classList.remove('show');
-            isTyping = false;
         }
     });
-    
-    searchInitialized = true;
-    console.log('Search functionality initialized successfully');
 }
 
-// Separate function for performing the actual search
 function performSearch(query, searchResults, searchBox) {
-    console.log('performSearch called with:', query);
-    console.log('Available facilities:', facilities.length);
+    if (!facilities || facilities.length === 0) return;
     
-    // Debug: Log all facilities that contain "kasarani"
-    console.log('Facilities containing "kasarani":');
-    facilities.forEach(f => {
-        if (f.name.toLowerCase().includes('kasarani') || 
-            f.type.toLowerCase().includes('kasarani') ||
-            f.county.toLowerCase().includes('kasarani')) {
-            console.log('Found:', f.name, '-', f.type, '-', f.county);
-        }
-    });
-    
-    // Check if facilities are loaded
-    if (!facilities || facilities.length === 0) {
-        console.log('No facilities loaded yet');
-        searchResults.innerHTML = '<div class="search-result-item">Loading facilities... Please wait</div>';
-        searchResults.classList.add('show');
-        return;
-    }
-    
-    // Search in facilities
     const results = facilities.filter(f => 
         f.name.toLowerCase().includes(query) || 
         f.type.toLowerCase().includes(query) ||
         f.county.toLowerCase().includes(query)
-    ).slice(0, 10); // Limit to 10 results
-    
-    console.log('Search results found:', results.length);
-    console.log('Search results:', results.map(f => f.name));
+    ).slice(0, 10);
     
     if (results.length > 0) {
         searchResults.innerHTML = results.map(f => `
             <div class="search-result-item" data-lat="${f.lat}" data-lng="${f.lng}" data-name="${f.name}" data-type="${f.type}">
                 <div class="search-result-name">
-                    <i class="fas fa-${getFacilityIcon(f.type)}" style="color: ${facilityColors[f.type] || '#5f6368'}; margin-right: 8px;"></i>
+                    <i class="fas fa-${getFacilityIconName(f.type)}" style="color: ${facilityColors[f.type] || '#5f6368'}; margin-right: 8px;"></i>
                     ${f.name}
                 </div>
                 <div class="search-result-type">${f.type} • ${f.county}</div>
             </div>
         `).join('');
         
-        // Add click handlers
         searchResults.querySelectorAll('.search-result-item').forEach(item => {
             item.addEventListener('click', function() {
                 const lat = parseFloat(this.dataset.lat);
                 const lng = parseFloat(this.dataset.lng);
                 const name = this.dataset.name;
-                const type = this.dataset.type;
                 
                 map.setView([lat, lng], 15);
-                
-                // Find and open popup
-                markers.forEach(marker => {
-                    if (marker.facilityData && 
-                        marker.facilityData.lat === lat && 
-                        marker.facilityData.lng === lng) {
-                        marker.openPopup();
-                    }
-                });
-                
                 searchResults.classList.remove('show');
                 searchBox.value = name;
             });
         });
         
-        console.log('Showing search results');
         searchResults.classList.add('show');
     } else {
-        console.log('No results found, showing no results message');
         searchResults.innerHTML = '<div class="search-result-item">No facilities found</div>';
         searchResults.classList.add('show');
     }
 }
 
-// FIX #4 - Implement heatmap functionality
-function setupHeatmap() {
-    const heatmapBtn = document.getElementById('heatmapBtn');
-    
-    heatmapBtn.addEventListener('click', function() {
-        if (isHeatmapActive) {
-            // Remove heatmap
-            if (heatmapLayer) {
-                map.removeLayer(heatmapLayer);
-                heatmapLayer = null;
-            }
-            isHeatmapActive = false;
-            this.classList.remove('active');
-            
-            // Markers remain visible (no need to add them back)
-            console.log('Heatmap deactivated, markers remain visible');
-        } else {
-            // Do NOT remove markers - show both heatmap and markers
-            // This allows users to see both the cluster numbers AND the heat intensity
-            
-            // Create heatmap data using ALL facilities (not filtered)
-            console.log(`Creating heatmap with ${allFacilities.length} facilities (all locations)`);
-            const heatData = allFacilities.map(f => [f.lat, f.lng, 0.8]); // intensity 0.8
-            
-            // Create heatmap layer with transparency so markers remain visible
-            heatmapLayer = L.heatLayer(heatData, {
-                radius: 25,
-                blur: 15,
-                maxZoom: 17,
-                opacity: 0.6, // Semi-transparent to see markers underneath
-                gradient: {
-                    0.2: '#4285F4',
-                    0.4: '#34A853',
-                    0.6: '#FBBC04',
-                    0.8: '#EA4335'
-                }
-            });
-            
-            heatmapLayer.addTo(map);
-            isHeatmapActive = true;
-            this.classList.add('active');
-            
-            console.log('Heatmap activated showing all facilities across Kenya with markers visible');
-            
-            // Remove GPS mode and road network when heatmap is activated
-            document.body.classList.remove('gps-mode', 'gps-navigation-mode');
-            clearRoadNetwork();
-            document.querySelectorAll('.header-btn').forEach(btn => btn.classList.remove('active'));
-            if (currentLayer !== 'streets') {
-                document.getElementById('mapViewBtn').classList.add('active');
-            } else {
-                this.classList.add('active');
-            }
-        }
-    });
-}
 
 // Setup event listeners
 function setupEventListeners() {
+    // Setup search functionality
+    setupSearch();
+    
     // Toggle sidebar
     document.getElementById('toggleSidebar').addEventListener('click', function() {
         const sidebar = document.getElementById('sidebar');
@@ -3361,26 +3049,62 @@ function setupEventListeners() {
         icon.className = sidebar.classList.contains('hidden') ? 'fas fa-bars' : 'fas fa-times';
     });
     
-    // County dropdown change event
+    // County dropdown change event - with debouncing
+    let countyTimeout;
     document.getElementById('countySelect').addEventListener('change', function() {
-        if (routingControl) {
-            map.removeControl(routingControl);
-            routingControl = null;
+        // Clear existing timeout
+        if (countyTimeout) {
+            clearTimeout(countyTimeout);
         }
-        populateFacilityList();
-        updateMarkers();
-        fitMapToFilteredFacilities();
+        
+        // Debounce for 300ms to prevent unresponsiveness
+        countyTimeout = setTimeout(() => {
+            if (routingControl) {
+                map.removeControl(routingControl);
+                routingControl = null;
+            }
+            populateFacilityList();
+            updateMarkers();
+        }, 300);
     });
     
-    // Facility type dropdown change event
+    // Facility type dropdown change event - with debouncing
+    let facilityTypeTimeout;
     document.getElementById('facilityTypeSelect').addEventListener('change', function() {
+        // Clear existing timeout
+        if (facilityTypeTimeout) {
+            clearTimeout(facilityTypeTimeout);
+        }
+        
+        // Debounce for 300ms to prevent unresponsiveness
+        facilityTypeTimeout = setTimeout(() => {
+            if (routingControl) {
+                map.removeControl(routingControl);
+                routingControl = null;
+            }
+            populateFacilityList();
+            updateMarkers();
+        }, 300);
+    });
+    
+    // Clear filters button
+    document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+        // Reset both dropdowns to 'all'
+        document.getElementById('countySelect').value = 'all';
+        document.getElementById('facilityTypeSelect').value = 'all';
+        
+        // Clear any active routing
         if (routingControl) {
             map.removeControl(routingControl);
             routingControl = null;
         }
+        
+        // Refresh displays with all facilities
         populateFacilityList();
         updateMarkers();
-        fitMapToFilteredFacilities();
+        
+        // Show notification
+        showNotification('Filters cleared - showing all facilities');
     });
     
     // Map view buttons
@@ -3586,14 +3310,16 @@ document.head.appendChild(style);
 
 // Debug panel removed - using normal console
 
-// Initialize everything when page loads
+// Initialize map and load facilities normally like a standard map
 window.addEventListener('load', function() {
-    console.log('Page loaded, initializing...');
+    console.log('Page loaded, initializing map...');
+    
+    // Initialize map
     initMap();
+    
+    // Setup event listeners
     setupEventListeners();
-    setupSearch(); // FIX #4 - Initialize search (will be called again after facilities load)
-    setupHeatmap(); // FIX #4 - Initialize heatmap
-    initializeUserLocation(); // Initialize user location
-    initializeVoices(); // Initialize text-to-speech voices
-    loadFacilities(); // Load facilities data
+    
+    // Load facilities normally
+    loadFacilities();
 });
