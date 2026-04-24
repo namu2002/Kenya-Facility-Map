@@ -183,7 +183,8 @@
         </div>
         
         <div class="filter-section">
-            <label>Filter by County:</label>
+            <label>Filter by Type:</label>
+            <div class="filter-buttons">
                 <button class="filter-btn" data-type="hospital">🏥 Hospitals</button>
                 <button class="filter-btn" data-type="clinic">🏥 Clinics</button>
                 <button class="filter-btn" data-type="pharmacy">💊 Pharmacies</button>
@@ -544,7 +545,7 @@
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(() => {
                     if (!isLoading) {
-                        const searchTerm = this.value;
+                        const searchTerm = searchInput.value;
                         displayFacilities(null, null, searchTerm);
                     }
                 }, 300); // Fast debounce - 300ms
