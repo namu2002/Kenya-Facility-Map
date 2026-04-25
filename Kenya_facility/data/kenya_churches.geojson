@@ -1,0 +1,773 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 1,
+        "name": "Nairobi Cathedral",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Nairobi",
+        "county": "Nairobi",
+        "osm_id": 1000001
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [36.8219, -1.2921]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 2,
+        "name": "Holy Family Basilica",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Nairobi",
+        "county": "Nairobi",
+        "osm_id": 1000002
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [36.8225, -1.2833]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 3,
+        "name": "All Saints Cathedral",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Nairobi",
+        "county": "Nairobi",
+        "osm_id": 1000003
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [36.8171, -1.2838]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 4,
+        "name": "St. Paul's Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Nairobi",
+        "county": "Nairobi",
+        "osm_id": 1000004
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [36.8350, -1.2780]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 5,
+        "name": "Kajiado AIC Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Kajiado",
+        "county": "Kajiado",
+        "osm_id": 1000005
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [36.8333, -1.7833]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 6,
+        "name": "Ngong Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Ngong",
+        "county": "Kajiado",
+        "osm_id": 1000006
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [36.6563, -1.3586]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 7,
+        "name": "Rongai Baptist Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Ongata Rongai",
+        "county": "Kajiado",
+        "osm_id": 1000007
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [36.7532, -1.3962]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 8,
+        "name": "Kiserian Pentecostal Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Kiserian",
+        "county": "Kajiado",
+        "osm_id": 1000008
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [36.6871, -1.4288]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 9,
+        "name": "Magadi Catholic Mission",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Magadi",
+        "county": "Kajiado",
+        "osm_id": 1000009
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [36.2809, -1.9464]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 10,
+        "name": "Mombasa Cathedral",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Mombasa",
+        "county": "Mombasa",
+        "osm_id": 1000010
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [39.6672, -4.0435]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 11,
+        "name": "Kisumu Seventh Day Adventist",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Kisumu",
+        "county": "Kisumu",
+        "osm_id": 1000011
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.7679, -0.0917]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 12,
+        "name": "Eldoret Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Eldoret",
+        "county": "Uasin Gishu",
+        "osm_id": 1000012
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [35.2694, 0.5141]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 13,
+        "name": "Nakuru All Saints",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Nakuru",
+        "county": "Nakuru",
+        "osm_id": 1000013
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [36.0648, -0.3031]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 14,
+        "name": "Thika Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Thika",
+        "county": "Kiambu",
+        "osm_id": 1000014
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [37.0789, -1.0331]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 15,
+        "name": "Kiambu Methodist Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Kiambu",
+        "county": "Kiambu",
+        "osm_id": 1000015
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [36.8322, -1.1719]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 16,
+        "name": "Machakos AIC Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Machakos",
+        "county": "Machakos",
+        "osm_id": 1000016
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [37.2622, -1.5177]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 17,
+        "name": "Kitui Catholic Mission",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Kitui",
+        "county": "Kitui",
+        "osm_id": 1000017
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [38.0125, -1.3667]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 18,
+        "name": "Garissa Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Garissa",
+        "county": "Garissa",
+        "osm_id": 1000018
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [39.6455, -0.4528]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 19,
+        "name": "Wajir Islamic Center",
+        "type": "mosque",
+        "category": "church",
+        "addr:city": "Wajir",
+        "county": "Wajir",
+        "osm_id": 1000019
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [40.0694, 1.7472]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 20,
+        "name": "Mandera Catholic Mission",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Mandera",
+        "county": "Mandera",
+        "osm_id": 1000020
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [40.0944, 3.9361]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 21,
+        "name": "Moyale Lutheran Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Moyale",
+        "county": "Marsabit",
+        "osm_id": 1000021
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [39.0556, 3.5361]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 22,
+        "name": "Isiolo Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Isiolo",
+        "county": "Isiolo",
+        "osm_id": 1000022
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [37.5833, 0.3500]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 23,
+        "name": "Meru Catholic Cathedral",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Meru",
+        "county": "Meru",
+        "osm_id": 1000023
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [37.6489, 0.0472]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 24,
+        "name": "Embu Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Embu",
+        "county": "Embu",
+        "osm_id": 1000024
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [37.4500, -0.5319]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 25,
+        "name": "Kirinyaga Catholic Mission",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Kerugoya",
+        "county": "Kirinyaga",
+        "osm_id": 1000025
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [37.1806, -0.6944]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 26,
+        "name": "Nyeri Catholic Cathedral",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Nyeri",
+        "county": "Nyeri",
+        "osm_id": 1000026
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [36.9500, -0.4167]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 27,
+        "name": "Laikipia Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Nanyuki",
+        "county": "Laikipia",
+        "osm_id": 1000027
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [37.0722, 0.0111]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 28,
+        "name": "Samburu Catholic Mission",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Maralal",
+        "county": "Samburu",
+        "osm_id": 1000028
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [36.2083, 1.7778]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 29,
+        "name": "Trans Nzoia Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Kitale",
+        "county": "Trans Nzoia",
+        "osm_id": 1000029
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.9972, 1.0167]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 30,
+        "name": "West Pokot Catholic Mission",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Kapenguria",
+        "county": "West Pokot",
+        "osm_id": 1000030
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [35.0722, 1.2389]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 31,
+        "name": "Turkana Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Lodwar",
+        "county": "Turkana",
+        "osm_id": 1000031
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [35.5972, 3.1194]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 32,
+        "name": "Baringo Catholic Mission",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Kabarnet",
+        "county": "Baringo",
+        "osm_id": 1000032
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [35.9722, 0.8278]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 33,
+        "name": "Bomet Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Bomet",
+        "county": "Bomet",
+        "osm_id": 1000033
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [35.3472, -0.7833]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 34,
+        "name": "Kericho Catholic Cathedral",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Kericho",
+        "county": "Kericho",
+        "osm_id": 1000034
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [35.3611, -0.2278]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 35,
+        "name": "Bungoma Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Bungoma",
+        "county": "Bungoma",
+        "osm_id": 1000035
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.5611, 0.5639]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 36,
+        "name": "Busia Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Busia",
+        "county": "Busia",
+        "osm_id": 1000036
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.1111, 0.4639]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 37,
+        "name": "Siaya Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Siaya",
+        "county": "Siaya",
+        "osm_id": 1000037
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.2889, 0.2389]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 38,
+        "name": "Homa Bay Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Homa Bay",
+        "county": "Homa Bay",
+        "osm_id": 1000038
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.7611, -0.5167]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 39,
+        "name": "Migori Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Migori",
+        "county": "Migori",
+        "osm_id": 1000039
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.4722, -1.0639]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 40,
+        "name": "Kisii Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Kisii",
+        "county": "Kisii",
+        "osm_id": 1000040
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.7778, -0.6889]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 41,
+        "name": "Nyamira Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Nyamira",
+        "county": "Nyamira",
+        "osm_id": 1000041
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.9389, -0.5389]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 42,
+        "name": "Narok Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Narok",
+        "county": "Narok",
+        "osm_id": 1000042
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [35.8611, -1.0789]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 43,
+        "name": "Kilifi Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Kilifi",
+        "county": "Kilifi",
+        "osm_id": 1000043
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [39.8506, -3.6333]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 44,
+        "name": "Kwale Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Kwale",
+        "county": "Kwale",
+        "osm_id": 1000044
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [39.4561, -4.1833]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 45,
+        "name": "Lamu Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Lamu",
+        "county": "Lamu",
+        "osm_id": 1000045
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [40.5139, -2.2722]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 46,
+        "name": "Taita Taveta Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Wundanyi",
+        "county": "Taita Taveta",
+        "osm_id": 1000046
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [38.3611, -3.3639]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 47,
+        "name": "Tana River Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Hola",
+        "county": "Tana River",
+        "osm_id": 1000047
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [39.7000, -1.2389]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "fid": 48,
+        "name": "Vihiga Catholic Church",
+        "type": "church",
+        "category": "church",
+        "addr:city": "Vihiga",
+        "county": "Vihiga",
+        "osm_id": 1000048
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [34.6889, 0.1167]
+      }
+    }
+  ]
+}

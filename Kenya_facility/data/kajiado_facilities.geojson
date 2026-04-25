@@ -1,0 +1,10 @@
+{
+  "type": "FeatureCollection",
+  "name": "kajiado_facilities",
+  "crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+  "features": [
+    {"type": "Feature", "properties": {"fid": 1, "name": "Kajiado County Hospital", "type": "hospital", "category": "health", "addr:city": "Kajiado", "osm_id": 7890123456}, "geometry": {"type": "Point", "coordinates": [36.8333, -1.7833]}},
+    {"type": "Feature", "properties": {"fid": 2, "name": "Kajiado Mixed Secondary", "type": "school", "category": "education", "addr:city": "Kajiado", "osm_id": 7890123457}, "geometry": {"type": "Point", "coordinates": [36.8333, -1.7833]}},
+    {"type": "Feature", "properties": {"fid": 3, "name": "Equity Bank Kajiado", "type": "bank", "category": "financial", "addr:city": "Kajiado", "osm_id": 7890123458}, "geometry": {"type": "Point", "coordinates": [36.8333, -1.7833]}}
+  ]
+}

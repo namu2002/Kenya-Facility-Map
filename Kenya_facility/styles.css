@@ -400,6 +400,29 @@ body {
     border-bottom: none;
 }
 
+.facility-directions-btn {
+    margin-top: 8px;
+    padding: 6px 12px;
+    background: #4285F4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s;
+}
+
+.facility-directions-btn:hover {
+    background: #3367D6;
+}
+
+.facility-directions-btn:active {
+    background: #2850A0;
+}
+
 .facility-name {
     font-size: 14px;
     font-weight: 500;
@@ -436,10 +459,11 @@ body {
     position: absolute;
     right: 20px;
     top: 80px;
-    z-index: 999;
     display: flex;
     flex-direction: column;
     gap: 8px;
+    z-index: 1001;
+    pointer-events: all;
 }
 
 .map-control-btn {
@@ -567,6 +591,7 @@ body {
     align-items: center;
     justify-content: center;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    animation: carMove 3s linear infinite;
 }
 
 .moving-car::before {

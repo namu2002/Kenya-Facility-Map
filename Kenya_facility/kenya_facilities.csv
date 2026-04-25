@@ -437,3 +437,73 @@ id,name,type,lat,lng,county,address,phone,hours,rating,wheelchair
 214,Elgeyo Marakwet Library,Library,0.5170,35.5010,Elgeyo Marakwet,"Iten","(053) 222-3456","9AM-6PM",3.9,TRUE
 215,Elgeyo Marakwet Police Station,Police Station,0.5150,35.4990,Elgeyo Marakwet,"Iten","(053) 222-7890","24/7",3.9,TRUE
 216,Elgeyo Marakwet Fire Station,Fire Station,0.5180,35.5020,Elgeyo Marakwet,"Iten","(053) 222-1122","24/7",4.0,TRUE
+217,Kajiado Township Primary School,School,-1.8452,36.7891,Kajiado,"Kajiado Town","","8AM-4PM",4.0,TRUE
+218,Almaktoum Girls Secondary School,School,-1.8451,36.7854,Kajiado,"Kajiado Town","","8AM-4PM",4.0,TRUE
+219,Maasai Technical Training Institute,College,-1.8506,36.7890,Kajiado,"Kajiado Town","","8AM-5PM",4.2,TRUE
+220,Kajiado County Referal Hospital,Hospital,-1.8573,36.7718,Kajiado,"Kajiado Town","","24/7",4.0,TRUE
+221,Border Medicare Centre,Clinic,-1.8421,36.7899,Kajiado,"Kajiado Town","","8AM-6PM",3.8,TRUE
+222,Kajiado Airport,Airport,-1.8233,36.7858,Kajiado,"Kajiado","","6AM-8PM",4.0,TRUE
+223,Kitengela Boys High School,School,-1.6149,36.8940,Kajiado,"Kitengela","","8AM-4PM",4.1,TRUE
+224,Kitengela Medical Services,Hospital,-1.4708,36.9635,Kajiado,"Kitengela","","24/7",4.0,TRUE
+225,Kiserian Primary School,School,-1.4214,36.6880,Kajiado,"Kiserian","","8AM-4PM",4.0,TRUE
+226,Ngong Township Primary School,School,-1.3619,36.6609,Kajiado,"Ngong","","8AM-4PM",4.0,TRUE
+227,Ngong Forest Primary School,School,-1.3028,36.7237,Kajiado,"Ngong","","8AM-4PM",4.0,TRUE
+228,Equity Bank Ngong,Bank,-1.3586,36.6563,Kajiado,"Ngong","","8AM-5PM",4.2,TRUE
+229,Chase Bank Ngong,Bank,-1.3581,36.6575,Kajiado,"Ngong","","8AM-5PM",4.0,TRUE
+230,Family Bank Ongata Rongai,Bank,-1.3962,36.7532,Kajiado,"Ongata Rongai","","8AM-5PM",4.0,TRUE
+231,Equity Bank Kiserian,Bank,-1.4288,36.6871,Kajiado,"Kiserian","","8AM-5PM",4.0,TRUE
+232,Magadi Airport,Airport,-1.9464,36.2809,Kajiado,"Magadi","","6AM-8PM",3.9,TRUE
+233,Ongata Rongai Health Centre,Clinic,-1.3950,36.7500,Kajiado,"Ongata Rongai","","8AM-6PM",3.8,TRUE
+234,Ongata Rongai Primary School,School,-1.3940,36.7510,Kajiado,"Ongata Rongai","","8AM-4PM",4.0,TRUE
+235,Ongata Rongai Police Post,Police Station,-1.3960,36.7490,Kajiado,"Ongata Rongai","","24/7",3.7,TRUE
+236,Nazarene University Kajiado Campus,School,-1.3930,36.7520,Kajiado,"Ongata Rongai","","8AM-5PM",4.1,TRUE
+237,Kiserian Market,Market,-1.4200,36.6860,Kajiado,"Kiserian","","6AM-7PM",4.1,TRUE
+238,Kiserian Health Centre,Clinic,-1.4220,36.6850,Kajiado,"Kiserian","","8AM-6PM",3.9,TRUE
+239,Kiserian Police Post,Police Station,-1.4210,36.6870,Kajiado,"Kiserian","","24/7",3.8,TRUE
+240,Kiserian Secondary School,School,-1.4190,36.6880,Kajiado,"Kiserian","","8AM-4PM",4.0,TRUE
+241,Ngong District Hospital,Hospital,-1.3570,36.6550,Kajiado,"Ngong","","24/7",4.1,TRUE
+242,Ngong Market,Market,-1.3590,36.6540,Kajiado,"Ngong","","6AM-7PM",4.2,TRUE
+243,Ngong Police Station,Police Station,-1.3580,36.6560,Kajiado,"Ngong","","24/7",4.0,TRUE
+244,Ngong Girls Secondary School,School,-1.3600,36.6530,Kajiado,"Ngong","","8AM-4PM",4.1,TRUE
+245,Magadi Soda Company,Factory,-1.9450,36.2810,Kajiado,"Magadi","","8AM-5PM",3.9,TRUE
+246,Magadi Health Centre,Clinic,-1.9470,36.2800,Kajiado,"Magadi","","8AM-6PM",3.8,TRUE
+247,Magadi Police Post,Police Station,-1.9460,36.2790,Kajiado,"Magadi","","24/7",3.7,TRUE
+248,Magadi Primary School,School,-1.9480,36.2780,Kajiado,"Magadi","","8AM-4PM",3.9,TRUE
+249,Magadi Market,Market,-1.9440,36.2820,Kajiado,"Magadi","","6AM-7PM",4.0,TRUE
+250,Nairobi Cathedral,Church,-1.2921,36.8219,Nairobi,"Nairobi City Centre","(020) 222-1234","8AM-6PM",4.6,TRUE
+251,Holy Family Basilica,Church,-1.2833,36.8225,Nairobi,"Nairobi City Centre","(020) 222-1235","8AM-6PM",4.7,TRUE
+252,All Saints Cathedral,Church,-1.2838,36.8171,Nairobi,"Nairobi City Centre","(020) 222-1236","8AM-6PM",4.5,TRUE
+253,St. Paul's Church,Church,-1.2780,36.8350,Nairobi,"Nairobi Westlands","(020) 222-1237","8AM-6PM",4.4,TRUE
+254,Kajiado AIC Church,Church,-1.7833,36.8333,Kajiado,"Kajiado Town","(072) 123-4567","8AM-6PM",4.3,TRUE
+255,Ngong Catholic Church,Church,-1.3586,36.6563,Kajiado,"Ngong Town","(072) 123-4568","8AM-6PM",4.4,TRUE
+256,Rongai Baptist Church,Church,-1.3962,36.7532,Kajiado,"Ongata Rongai","(072) 123-4569","8AM-6PM",4.2,TRUE
+257,Kiserian Pentecostal Church,Church,-1.4288,36.6871,Kajiado,"Kiserian Town","(072) 123-4570","8AM-6PM",4.3,TRUE
+258,Magadi Catholic Mission,Church,-1.9464,36.2809,Kajiado,"Magadi Town","(072) 123-4571","8AM-6PM",4.1,TRUE
+259,Mombasa Cathedral,Church,-4.0435,39.6672,Mombasa,"Mombasa Island","(041) 222-1234","8AM-6PM",4.5,TRUE
+260,Kisumu Seventh Day Adventist,Church,-0.0917,34.7679,Kisumu,"Kisumu Town","(057) 222-1234","8AM-6PM",4.4,TRUE
+261,Eldoret Catholic Church,Church,0.5141,35.2694,Uasin Gishu,"Eldoret Town","(053) 222-1234","8AM-6PM",4.3,TRUE
+262,Nakuru All Saints,Church,-0.3031,36.0648,Nakuru,"Nakuru Town","(051) 222-1234","8AM-6PM",4.4,TRUE
+263,Thika Catholic Church,Church,-1.0331,37.0789,Kiambu,"Thika Town","(067) 222-1234","8AM-6PM",4.2,TRUE
+264,Kiambu Methodist Church,Church,-1.1719,36.8322,Kiambu,"Kiambu Town","(067) 222-1235","8AM-6PM",4.3,TRUE
+265,Machakos AIC Church,Church,-1.5177,37.2622,Machakos,"Machakos Town","(044) 222-1234","8AM-6PM",4.1,TRUE
+266,Kitui Catholic Mission,Church,-1.3667,38.0125,Kitui,"Kitui Town","(044) 222-1235","8AM-6PM",4.2,TRUE
+267,Garissa Catholic Church,Church,-0.4528,39.6455,Garissa,"Garissa Town","(046) 222-1234","8AM-6PM",4.0,TRUE
+268,Wajir Islamic Center,Mosque,1.7472,40.0694,Wajir,"Wajir Town","(046) 222-1235","8AM-6PM",4.1,TRUE
+269,Mandera Catholic Mission,Church,3.9361,40.0944,Mandera,"Mandera Town","(046) 222-1236","8AM-6PM",3.9,TRUE
+270,Moyale Lutheran Church,Church,3.5361,39.0556,Marsabit,"Moyale Town","(069) 222-1234","8AM-6PM",3.8,TRUE
+271,Isiolo Catholic Church,Church,0.3500,37.5833,Isiolo,"Isiolo Town","(064) 222-1234","8AM-6PM",4.0,TRUE
+272,Meru Catholic Cathedral,Church,0.0472,37.6489,Meru,"Meru Town","(064) 222-1235","8AM-6PM",4.3,TRUE
+273,Embu Catholic Church,Church,-0.5319,37.4500,Embu,"Embu Town","(068) 222-1234","8AM-6PM",4.1,TRUE
+274,Kirinyaga Catholic Mission,Church,-0.6944,37.1806,Kirinyaga,"Kerugoya Town","(068) 222-1235","8AM-6PM",4.2,TRUE
+275,Nyeri Catholic Cathedral,Church,-0.4167,36.9500,Nyeri,"Nyeri Town","(061) 222-1234","8AM-6PM",4.4,TRUE
+276,Laikipia Catholic Church,Church,0.0111,37.0722,Laikipia,"Nanyuki Town","(062) 222-1234","8AM-6PM",4.0,TRUE
+277,Samburu Catholic Mission,Church,1.7778,36.2083,Samburu,"Maralal Town","(062) 222-1235","8AM-6PM",3.9,TRUE
+278,Trans Nzoia Catholic Church,Church,1.0167,34.9972,Trans Nzoia,"Kitale Town","(072) 222-1234","8AM-6PM",4.1,TRUE
+279,West Pokot Catholic Mission,Church,1.2389,35.0722,West Pokot,"Kapenguria Town","(072) 222-1235","8AM-6PM",3.8,TRUE
+280,Turkana Catholic Church,Church,3.1194,35.5972,Turkana,"Lodwar Town","(072) 222-1236","8AM-6PM",3.7,TRUE
+281,Baringo Catholic Mission,Church,0.8278,35.9722,Baringo,"Kabarnet Town","(072) 222-1237","8AM-6PM",3.9,TRUE
+282,Bomet Catholic Church,Church,-0.7833,35.3472,Bomet,"Bomet Town","(072) 222-1238","8AM-6PM",4.0,TRUE
+283,Kericho Catholic Cathedral,Church,-0.2278,35.3611,Kericho,"Kericho Town","(072) 222-1239","8AM-6PM",4.2,TRUE
+284,Bungoma Catholic Church,Church,0.5639,34.5611,Bungoma,"Bungoma Town","(072) 222-1240","8AM-6PM",4.1,TRUE
+285,Busia Catholic Church,Church,0.4639,34.1111,Busia,"Busia Town","(072) 222-1241","8AM-6PM",4.0,TRUE
+286,Siaya Catholic Church,Church,0.2389,34.2889,Siaya,"Siaya Town","(072) 222-1242","8AM-6PM",4.1,TRUE

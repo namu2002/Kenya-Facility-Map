@@ -8,6 +8,18 @@ let selectedFacility = null;
 let routingControl = null;
 let apiCache = new Map(); // Cache API responses
 let iconCache = new Map(); // Cache map icons
+let speechEngine = window.speechSynthesis;
+let currentSpeech = null;
+let navigationEnabled = true;
+let currentLayer = 'streets'; // Track current map layer
+
+
+// Map layers
+let currentBaseLayer = null;
+let streetLayer = null;
+let satelliteLayer = null;
+let terrainLayer = null;
+
 
 // Nearest road calculation - finds road with shortest driving path
 function findNearestRoad(lat, lng, callback) {
@@ -305,17 +317,42 @@ function initializeVoices() {
     }
 }
 
+// Initialize voices on load
+initializeVoices();
+
+// Unlock speech synthesis on first user interaction (required by browsers)
+let speechUnlocked = false;
+function unlockSpeech() {
+    if (!speechUnlocked && window.speechSynthesis) {
+        const silent = new SpeechSynthesisUtterance('');
+        silent.volume = 0;
+        window.speechSynthesis.speak(silent);
+        speechUnlocked = true;
+    }
+}
+
+// Add unlock listeners
+['click', 'touchstart', 'keydown'].forEach(event => {
+    document.addEventListener(event, unlockSpeech, { once: true });
+});
+
 // Speak navigation instructions with proper queue management
 function speakNavigation(text, priority = false) {
-    if (!consoleLogEnabled) {
-        // Check if speech synthesis is available
-        if (!window.speechSynthesis) {
-            return;
-        }
+    // Check if voice navigation is enabled
+    if (!navigationEnabled) {
+        console.log('Voice navigation disabled, skipping:', text);
+        return;
+    }
+    
+    // Check if speech synthesis is available
+    if (!window.speechSynthesis) {
+        console.log('Speech synthesis not available');
+        return;
     }
     
     // Ensure voices are loaded
     if (!voicesLoaded) {
+        // Try again after voices load
         setTimeout(() => speakNavigation(text, priority), 100);
         return;
     }
@@ -813,6 +850,66 @@ function addCurrentRoadDisplay() {
     roadControl.addTo(map);
 }
 
+// Voice Navigation Functions - simplified working version
+function speakDirection(text, priority = false) {
+    // Use the main speech system
+    speakNavigation(text, priority);
+}
+
+function findNearbyLandmarks(lat, lng, radius = 0.5) {
+    // Find facilities near the current position for landmark references
+    return facilities.filter(facility => {
+        if (!facility.lat || !facility.lng) return false;
+        
+        const distance = calculateDistance(lat, lng, facility.lat, facility.lng);
+        return distance <= radius; // Within 500 meters
+    }).sort((a, b) => {
+        const distA = calculateDistance(lat, lng, a.lat, a.lng);
+        const distB = calculateDistance(lat, lng, b.lat, b.lng);
+        return distA - distB;
+    });
+}
+
+function createLandmarkBasedInstruction(lat, lng, baseInstruction) {
+    const landmarks = findNearbyLandmarks(lat, lng, 0.3); // 300m radius
+    
+    if (landmarks.length === 0) return baseInstruction;
+    
+    const mainLandmark = landmarks[0];
+    const distance = calculateDistance(lat, lng, mainLandmark.lat, mainLandmark.lng);
+    const distanceText = distance < 100 ? 'about 50 meters' : 
+                        distance < 200 ? 'about 100 meters' : 
+                        distance < 300 ? 'about 200 meters' : 'about 300 meters';
+    
+    // Create landmark-enhanced instruction
+    let landmarkInstruction = baseInstruction;
+    
+    if (mainLandmark.type === 'hospital') {
+        landmarkInstruction += ` near ${mainLandmark.name}`;
+    } else if (mainLandmark.type === 'school') {
+        landmarkInstruction += ` by ${mainLandmark.name}`;
+    } else if (mainLandmark.type === 'church') {
+        landmarkInstruction += ` past ${mainLandmark.name}`;
+    } else if (mainLandmark.type === 'bank') {
+        landmarkInstruction += ` close to ${mainLandmark.name}`;
+    } else {
+        landmarkInstruction += ` near ${mainLandmark.name}`;
+    }
+    
+    return landmarkInstruction;
+}
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c * 1000; // Distance in meters
+}
+
 // Enhanced route styling for GPS navigation
 function styleGPSRoute(route) {
     return {
@@ -973,16 +1070,16 @@ function animateGPSRoute(routeCoordinates, routeSteps) {
                 else turnText = 'Turn';
                 
                 gpsInstruction = turnText;
-                if (street && street !== lastStreet) {
+                if (street && street !== lastStreet && !gpsInstruction.includes(street)) {
                     gpsInstruction += ` onto ${street}`;
-                } else if (street) {
+                } else if (street && !gpsInstruction.includes(street)) {
                     gpsInstruction += ` on ${street}`;
                 }
                 announcementType = 'turn';
                 
             } else if (maneuverType === 'uturn') {
                 gpsInstruction = 'Make a U-turn';
-                if (street) gpsInstruction += ` on ${street}`;
+                if (street && !gpsInstruction.includes(street)) gpsInstruction += ` on ${street}`;
                 announcementType = 'uturn';
                 
             } else if (maneuverType === 'new name' || (street && street !== lastStreet && stepDistance < 100)) {
@@ -1009,8 +1106,17 @@ function animateGPSRoute(routeCoordinates, routeSteps) {
                 return;
             }
             
-            // Remove 'end of road' and clean up
+            // Remove 'end of road' and clean up duplicates
             gpsInstruction = gpsInstruction.replace(/end of road/gi, '').replace(/\s+/g, ' ').trim();
+            
+            // Remove duplicate road names (e.g., "on Mombasa Road on Mombasa Road" -> "on Mombasa Road")
+            const roadNamePattern = /on\s+([^.\s]+(?:\s+[^.\s]+)*)/;
+            const matches = gpsInstruction.match(roadNamePattern);
+            if (matches && matches.length > 1) {
+                const roadName = matches[1];
+                const regex = new RegExp(`on\\s+${roadName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+on\\s+${roadName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'gi');
+                gpsInstruction = gpsInstruction.replace(regex, `on ${roadName}`);
+            }
             
             // Only add meaningful directions
             if (gpsInstruction && gpsInstruction.length > 3) {
@@ -1039,42 +1145,17 @@ function animateGPSRoute(routeCoordinates, routeSteps) {
     
     console.log('Turn-by-turn directions:', turnByTurnDirections);
     
-    // Speak directions - ensure speech works
-    function speak(text) {
-        if ('speechSynthesis' in window) {
-            // Cancel any ongoing speech to prevent queue buildup
-            window.speechSynthesis.cancel();
-            
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 0.9;
-            utterance.volume = 1.0;
-            utterance.pitch = 1.0;
-            
-            // Try to resume speech synthesis (needed for some browsers)
-            if (window.speechSynthesis.paused) {
-                window.speechSynthesis.resume();
-            }
-            
-            window.speechSynthesis.speak(utterance);
-            console.log('Speaking:', text);
-        } else {
-            console.log('Speech synthesis not supported');
+    // Enhanced speak directions using unified voice system
+    function speak(text, currentLat = null, currentLng = null) {
+        // Enhance instruction with landmarks if coordinates provided
+        let enhancedText = text;
+        if (currentLat && currentLng) {
+            enhancedText = createLandmarkBasedInstruction(currentLat, currentLng, text);
         }
+        
+        // Use the main speakNavigation function for consistent voice
+        speakNavigation(enhancedText, true); // priority = true for navigation instructions
     }
-    
-    // Initialize speech on first user interaction (required by browsers)
-    function initSpeech() {
-        if ('speechSynthesis' in window) {
-            // Speak a silent utterance to unlock speech
-            const silent = new SpeechSynthesisUtterance('');
-            silent.volume = 0;
-            window.speechSynthesis.speak(silent);
-            console.log('Speech synthesis initialized');
-        }
-    }
-    
-    // Initialize speech now
-    initSpeech();
     
     // Get current direction based on progress
     function getCurrentDirection(progress) {
@@ -1123,14 +1204,16 @@ function animateGPSRoute(routeCoordinates, routeSteps) {
     
     // Start voice navigation with user interaction check
     const startNavigation = () => {
-        speak("Starting GPS navigation.");
+        speak("Starting GPS navigation with landmark guidance.");
         setTimeout(() => {
             const firstDir = turnByTurnDirections[0];
             let intro = firstDir.instruction;
             if (firstDir.street && firstDir.street !== 'the road') {
                 intro += ` on ${firstDir.street}`;
             }
-            speak(intro);
+            // Pass starting coordinates for landmark detection
+            const startCoords = routeCoordinates[0];
+            speak(intro, startCoords[0], startCoords[1]);
         }, 500);
     };
     
@@ -1143,6 +1226,9 @@ function animateGPSRoute(routeCoordinates, routeSteps) {
     let lastSpokenStep = -1;
     let carStartTime = Date.now();
     let isSpeaking = false;
+    let cumulativeDistance = 0; // Track total distance traveled
+    let lastSpokenDistance = -1; // Track when we last spoke for distance-based triggers
+    let hasAnnouncedArrival = false; // Track if arrival has been announced
     
     // Calculate segment distances for realistic timing
     const segmentDistances = [];
@@ -1156,8 +1242,8 @@ function animateGPSRoute(routeCoordinates, routeSteps) {
         totalRouteDistance += dist;
     }
     
-    // Average car speed: 120 km/h = 33.33 m/s for fast highway driving
-    const carSpeedMPS = 33.33;
+    // Average car speed: 54 km/h = 15 m/s for realistic urban driving with voice sync
+    const carSpeedMPS = 15;
     
     // Estimate time for voice to speak (average 3 words per second)
     function estimateSpeechTime(text) {
@@ -1167,9 +1253,12 @@ function animateGPSRoute(routeCoordinates, routeSteps) {
     
     function navigateStep() {
         if (currentIndex >= routeCoordinates.length) {
-            // Arrived
-            if (lastSpokenStep !== turnByTurnDirections.length - 1) {
+            // Arrived at destination
+            if (!hasAnnouncedArrival) {
+                hasAnnouncedArrival = true;
+                console.log('Car arrived at destination - announcing arrival');
                 speak("You have arrived at your destination.");
+                showNotification('You have arrived at your destination');
             }
             updatePanel(1);
             return;
@@ -1185,6 +1274,11 @@ function animateGPSRoute(routeCoordinates, routeSteps) {
         // Move car to current position
         window.carMarker.setLatLng(position);
         
+        // Track cumulative distance for precise voice timing
+        if (currentIndex > 0) {
+            cumulativeDistance += segmentDistances[currentIndex - 1] || 0;
+        }
+        
         // Smooth map following (only pan every 5 points)
         if (currentIndex % 5 === 0) {
             map.panTo(position);
@@ -1195,13 +1289,34 @@ function animateGPSRoute(routeCoordinates, routeSteps) {
             updatePanel(progress);
         }
         
-        // Voice directions at step changes
+        // Voice directions at step changes AND precise distance triggers
+        const direction = turnByTurnDirections[currentStepIndex];
+        const nextDirection = turnByTurnDirections[currentStepIndex + 1];
+        
+        // Check for precise distance-based triggers (100m, 50m before turns)
+        if (nextDirection && (direction.type === 'turn' || direction.type === 'left' || direction.type === 'right')) {
+            const remainingDistance = nextDirection.distanceMeters;
+            
+            // Speak at exactly 100 meters before turn
+            if (remainingDistance > 0 && remainingDistance <= 100 && lastSpokenDistance !== 100) {
+                lastSpokenDistance = 100;
+                const warningText = `In 100 meters, ${direction.instruction}`;
+                speak(warningText, position[0], position[1]);
+                console.log('100m warning:', warningText);
+            }
+            // Speak at exactly 50 meters before turn
+            else if (remainingDistance > 0 && remainingDistance <= 50 && lastSpokenDistance !== 50) {
+                lastSpokenDistance = 50;
+                const warningText = `In 50 meters, ${direction.instruction}`;
+                speak(warningText, position[0], position[1]);
+                console.log('50m warning:', warningText);
+            }
+        }
+        
+        // Regular step-based voice directions
         if (currentStepIndex !== lastSpokenStep && currentStepIndex < turnByTurnDirections.length) {
             lastSpokenStep = currentStepIndex;
             isSpeaking = true;
-            
-            const direction = turnByTurnDirections[currentStepIndex];
-            const nextDirection = turnByTurnDirections[currentStepIndex + 1];
             
             // Build GPS announcement
             let announcement = '';
@@ -1214,10 +1329,15 @@ function animateGPSRoute(routeCoordinates, routeSteps) {
             } else if (direction.type === 'roundabout') {
                 announcement = `Approaching roundabout. ${direction.instruction}`;
             } else if (direction.type === 'turn' || direction.type === 'left' || direction.type === 'right') {
-                if (nextDirection && nextDirection.distanceMeters < 200) {
-                    announcement = `In ${nextDirection.distanceMeters} meters, ${nextDirection.instruction}`;
-                } else if (nextDirection && nextDirection.distanceMeters < 1000) {
-                    announcement = `In ${Math.round(nextDirection.distanceMeters / 100) * 100} meters, ${nextDirection.instruction}`;
+                // Calculate remaining distance to next turn
+                const remainingDistance = nextDirection ? nextDirection.distanceMeters : 0;
+                
+                if (remainingDistance > 0 && remainingDistance <= 100) {
+                    announcement = `In ${remainingDistance} meters, ${direction.instruction}`;
+                } else if (remainingDistance > 100 && remainingDistance <= 200) {
+                    announcement = `In ${Math.round(remainingDistance / 50) * 50} meters, ${direction.instruction}`;
+                } else if (remainingDistance > 200 && remainingDistance < 1000) {
+                    announcement = `In ${Math.round(remainingDistance / 100) * 100} meters, ${direction.instruction}`;
                 } else {
                     announcement = direction.instruction;
                     if (direction.distanceMeters > 500) {
@@ -1229,33 +1349,46 @@ function animateGPSRoute(routeCoordinates, routeSteps) {
             } else if (direction.type === 'road_change') {
                 announcement = direction.instruction;
             } else if (direction.type === 'straight' && direction.distanceMeters > 1000) {
-                announcement = `Continue on ${direction.street} for ${direction.distance} kilometers.`;
+                if (direction.street && !announcement.includes(direction.street)) {
+                    announcement = `Continue on ${direction.street} for ${direction.distance} kilometers.`;
+                } else {
+                    announcement = `Continue for ${direction.distance} kilometers.`;
+                }
             } else if (currentStepIndex === turnByTurnDirections.length - 1 || direction.type === 'arrive') {
                 announcement = 'You have arrived at your destination.';
+                hasAnnouncedArrival = true; // Mark arrival as announced
             }
             
             if (announcement) {
                 console.log('Announcing:', announcement);
-                speak(announcement);
+                // Pass current position for landmark-based navigation
+                speak(announcement, position[0], position[1]);
                 
-                // Calculate timing: car should arrive at next step when voice finishes
+                // Calculate timing to sync car with voice
                 const speechTime = estimateSpeechTime(announcement);
                 const nextStepDistance = segmentDistances[currentIndex] || 50;
                 const timeToNextStep = (nextStepDistance / carSpeedMPS) * 1000;
                 
-                // If speech is longer than travel time, pause car until speech finishes
-                const pauseTime = Math.max(0, speechTime - timeToNextStep);
-                
-                // Don't pause car for voice - let car move fast, voice will catch up
-                // Car speed priority over voice sync for 120kph experience
-                
-                setTimeout(() => { isSpeaking = false; }, speechTime);
+                // For turns and arrivals, pause car until voice finishes so they stay in sync
+                if (direction.type === 'turn' || direction.type === 'left' || direction.type === 'right' || 
+                    direction.type === 'roundabout' || direction.type === 'arrive' || 
+                    currentStepIndex === turnByTurnDirections.length - 1) {
+                    const pauseTime = Math.max(0, speechTime - timeToNextStep + 500); // +500ms buffer
+                    if (pauseTime > 0) {
+                        console.log(`Pausing car for ${pauseTime}ms at turn to sync with voice`);
+                        setTimeout(() => { isSpeaking = false; }, speechTime + pauseTime);
+                    } else {
+                        setTimeout(() => { isSpeaking = false; }, speechTime);
+                    }
+                } else {
+                    setTimeout(() => { isSpeaking = false; }, speechTime);
+                }
             }
         }
         
         // Calculate time for this segment based on actual distance
         const segmentDistance = segmentDistances[currentIndex] || 50; // meters
-        const segmentTime = Math.max(20, (segmentDistance / carSpeedMPS) * 1000); // milliseconds, min 20ms for max speed
+        const segmentTime = Math.max(50, (segmentDistance / carSpeedMPS) * 1000); // milliseconds, min 50ms
         
         currentIndex++;
         setTimeout(navigateStep, segmentTime);
@@ -1561,92 +1694,181 @@ function categorizeFacility(type) {
     }
 }
 
-// Load facilities from CSV - FINAL FIX
+
+// Heatmap functionality
+let heatmapLayer = null;
+let heatmapActive = false;
+
+function toggleHeatmap() {
+    console.log('Toggling heatmap...');
+    
+    if (!map) {
+        console.error('Map not initialized');
+        showNotification('Map not ready yet');
+        return;
+    }
+    
+    if (!facilities || facilities.length === 0) {
+        console.error('No facilities loaded');
+        showNotification('No facilities to display');
+        return;
+    }
+    
+    const heatmapBtn = document.getElementById('heatmapBtn');
+    
+    if (heatmapActive) {
+        // Remove heatmap
+        try {
+            if (heatmapLayer) {
+                map.removeLayer(heatmapLayer);
+                heatmapLayer = null;
+            }
+            heatmapActive = false;
+            if (heatmapBtn) heatmapBtn.style.background = '';
+            if (heatmapBtn) heatmapBtn.classList.remove('active');
+            showNotification('Heatmap disabled');
+            console.log('Heatmap disabled');
+        } catch(e) {
+            console.error('Error disabling heatmap:', e);
+        }
+    } else {
+        // Create heatmap
+        try {
+            createHeatmap();
+            heatmapActive = true;
+            if (heatmapBtn) {
+                heatmapBtn.style.background = '#FF5722';
+                heatmapBtn.classList.add('active');
+            }
+            showNotification('Heatmap enabled - showing facility density');
+            console.log('Heatmap enabled with', facilities.length, 'facilities');
+        } catch(e) {
+            console.error('Error enabling heatmap:', e);
+            showNotification('Failed to enable heatmap');
+        }
+    }
+}
+
+function createHeatmap() {
+    // Create intensity points based on facility density
+    const heatData = facilities.map(facility => {
+        if (!facility.lat || !facility.lng) return null;
+        return {
+            lat: parseFloat(facility.lat),
+            lng: parseFloat(facility.lng),
+            intensity: 1.0 // Base intensity for all facilities
+        };
+    }).filter(point => point !== null);
+    
+    // Create simple heatmap using circles
+    heatmapLayer = L.layerGroup();
+    
+    heatData.forEach(point => {
+        const circle = L.circle([point.lat, point.lng], {
+            radius: 300, // 300m radius - much smaller to show individual facility heat
+            color: '#FF5722',
+            fillColor: '#FF5722',
+            fillOpacity: 0.4,
+            weight: 1,
+            opacity: 0.6
+        });
+        
+        heatmapLayer.addLayer(circle);
+    });
+    
+    heatmapLayer.addTo(map);
+}
+
+// Load facilities from CSV
 async function loadFacilities() {
+    console.log('Loading facilities...');
+    facilities = [];
+    
     try {
-        console.log('Loading facilities...');
-        
-        facilities = [];
-        
-        // Load CSV
         const response = await fetch('kenya_facilities.csv');
-        const csvText = await response.text();
-        const lines = csvText.split('\n');
+        if (!response.ok) throw new Error('Failed to fetch CSV: ' + response.status);
         
-        // Parse all facilities
+        const csvText = await response.text();
+        console.log('CSV fetched, size:', csvText.length, 'bytes');
+        const lines = csvText.split('\n');
+        console.log('CSV lines:', lines.length);
+        
         for (let i = 1; i < lines.length; i++) {
             const line = lines[i].trim();
             if (!line) continue;
             
-            const [id, name, type, lat, lng, county, address, phone, hours, rating, wheelchair] = line.split(',');
+            const parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            const id = parts[0] || i;
+            const name = (parts[1] || 'Unknown').replace(/"/g, '');
+            const type = (parts[2] || 'Unknown').replace(/"/g, '');
+            const lat = parseFloat(parts[3]);
+            const lng = parseFloat(parts[4]);
+            const county = (parts[5] || 'Unknown').replace(/"/g, '');
+            const address = (parts[6] || '').replace(/"/g, '');
+            const phone = (parts[7] || '').replace(/"/g, '');
+            const hours = (parts[8] || '').replace(/"/g, '');
+            const rating = parseFloat(parts[9]) || 4.0;
+            const wheelchair = parts[10] ? parts[10].replace(/"/g, '') === 'TRUE' : false;
             
-            if (lat && lng) {
+            if (!isNaN(lat) && !isNaN(lng)) {
                 facilities.push({
-                    id: id || i,
-                    name: name || 'Unknown',
-                    type: type || 'Facility',
-                    category: categorizeFacility(type || 'Facility'),
-                    lat: parseFloat(lat),
-                    lng: parseFloat(lng),
-                    county: county || 'Unknown',
-                    address: address || '',
-                    phone: phone || '',
-                    hours: hours || '',
-                    rating: parseFloat(rating) || 4.0
+                    id: id, name: name, type: type,
+                    lat: lat, lng: lng, county: county,
+                    address: address, phone: phone,
+                    hours: hours, rating: rating,
+                    wheelchair: wheelchair,
+                    category: categorizeFacility(type)
                 });
             }
         }
         
-        console.log(`Loaded ${facilities.length} facilities`);
+        console.log('Loaded ' + facilities.length + ' facilities');
         
-        // Update UI immediately
+        // Update badge
         document.getElementById('facilityCountBadge').textContent = facilities.length;
+        
+        // Update markers
         updateMarkers();
+        
+        // Populate dropdown
         populateCountyDropdown();
-        hideLoading();
         
     } catch (error) {
         console.error('Load error:', error);
+    } finally {
+        // ALWAYS hide loading - no matter what happens above
+        console.log('Hiding loading spinner...');
         hideLoading();
     }
 }
 
-// Chunked rendering function for smooth performance
-function renderFacilitiesInChunks() {
-    const CHUNK_SIZE = 50; // Process 50 facilities at a time
-    let currentChunk = 0;
-    // ... (rest of the function remains the same)
+
+// Force refresh facilities data
+async function forceRefreshFacilities() {
+    console.log('Force refreshing facilities...');
+    showLoading();
     
-    function processChunk() {
-        const start = currentChunk * CHUNK_SIZE;
-        const end = Math.min(start + CHUNK_SIZE, facilities.length);
-        
-        if (start >= facilities.length) {
-            // All chunks processed
-            console.log('All facilities rendered');
-            return;
-        }
-        
-        // Process current chunk
-        const chunk = facilities.slice(start, end);
-        
-        // Update markers for this chunk
-        updateMarkersChunk(chunk);
-        
-        // Update facility list for this chunk (limited to 100 total)
-        if (start < 100) {
-            updateFacilityListChunk(chunk.slice(0, Math.min(chunk.length, 100 - start)));
-        }
-        
-        currentChunk++;
-        
-        // Process next chunk using requestAnimationFrame for smooth rendering
-        requestAnimationFrame(processChunk);
+    // Clear all existing data
+    facilities = [];
+    markers = [];
+    if (markerCluster) {
+        map.removeLayer(markerCluster);
+        markerCluster = null;
     }
     
-    // Start processing chunks
-    requestAnimationFrame(processChunk);
+    // Clear browser cache for CSV
+    const timestamp = new Date().getTime() + Math.random();
+    console.log('Loading with timestamp:', timestamp);
+    
+    await loadFacilities();
 }
+
+// Test function - can be called from console: testRefresh()
+window.testRefresh = async function() {
+    console.log('Manual test refresh triggered');
+    await forceRefreshFacilities();
+};
+
 
 // Update markers for a chunk of facilities
 function updateMarkersChunk(chunk) {
@@ -1693,12 +1915,28 @@ function updateFacilityListChunk(chunk) {
         `;
     }
     
-    // Add chunk items
+    // Use document fragment for better performance
     const fragment = document.createDocumentFragment();
     chunk.forEach(facility => {
         const item = createFacilityItem(facility);
         fragment.appendChild(item);
     });
+    facilityList.appendChild(fragment);
+}
+
+// Render facility list chunk for optimized loading
+function renderFacilityListChunk(chunk) {
+    const facilityList = document.getElementById('facilityList');
+    
+    if (!facilityList) return;
+    
+    // Use document fragment for better performance
+    const fragment = document.createDocumentFragment();
+    chunk.forEach(facility => {
+        const item = createFacilityItem(facility);
+        fragment.appendChild(item);
+    });
+    
     facilityList.appendChild(fragment);
 }
 
@@ -1956,10 +2194,16 @@ function createFacilityItem(facility) {
                 </div>
             </div>
         </div>
+        <button class="facility-directions-btn" style="margin-top: 8px; padding: 6px 12px; background: #4285F4; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px;" onclick="event.stopPropagation(); getDirections(${facility.lat}, ${facility.lng});">
+            <i class="fas fa-route"></i> Get Directions
+        </button>
     `;
     
-    // Add click handler with debouncing
-    item.addEventListener('click', () => {
+    // Add click handler with debouncing (for the whole item except the directions button)
+    item.addEventListener('click', (e) => {
+        // Don't trigger if clicking the directions button
+        if (e.target.closest('.facility-directions-btn')) return;
+        
         requestAnimationFrame(() => {
             map.setView([facility.lat, facility.lng], 15);
             // Find and open marker popup (optimized search)
@@ -3034,24 +3278,46 @@ function performSearch(query, searchResults, searchBox) {
 
 // Setup event listeners
 function setupEventListeners() {
+    console.log('Setting up event listeners...');
+    
     // Setup search functionality
-    setupSearch();
+    try {
+        setupSearch();
+        setupCountySearch();
+    } catch(e) {
+        console.error('Search setup failed:', e);
+    }
+    
+    // Helper function to safely add event listener
+    function safeAddListener(id, event, handler) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener(event, handler);
+            console.log(`Listener added for ${id}`);
+        } else {
+            console.warn(`Element ${id} not found`);
+        }
+    }
     
     // Toggle sidebar
-    document.getElementById('toggleSidebar').addEventListener('click', function() {
+    safeAddListener('toggleSidebar', 'click', function() {
         const sidebar = document.getElementById('sidebar');
         const toggle = document.getElementById('toggleSidebar');
         
-        sidebar.classList.toggle('hidden');
-        toggle.classList.toggle('shifted');
-        
-        const icon = toggle.querySelector('i');
-        icon.className = sidebar.classList.contains('hidden') ? 'fas fa-bars' : 'fas fa-times';
+        if (sidebar && toggle) {
+            sidebar.classList.toggle('hidden');
+            toggle.classList.toggle('shifted');
+            
+            const icon = toggle.querySelector('i');
+            if (icon) {
+                icon.className = sidebar.classList.contains('hidden') ? 'fas fa-bars' : 'fas fa-times';
+            }
+        }
     });
     
     // County dropdown change event - with debouncing
     let countyTimeout;
-    document.getElementById('countySelect').addEventListener('change', function() {
+    safeAddListener('countySelect', 'change', function() {
         // Clear existing timeout
         if (countyTimeout) {
             clearTimeout(countyTimeout);
@@ -3070,7 +3336,7 @@ function setupEventListeners() {
     
     // Facility type dropdown change event - with debouncing
     let facilityTypeTimeout;
-    document.getElementById('facilityTypeSelect').addEventListener('change', function() {
+    safeAddListener('facilityTypeSelect', 'change', function() {
         // Clear existing timeout
         if (facilityTypeTimeout) {
             clearTimeout(facilityTypeTimeout);
@@ -3088,10 +3354,12 @@ function setupEventListeners() {
     });
     
     // Clear filters button
-    document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+    safeAddListener('clearFiltersBtn', 'click', function() {
         // Reset both dropdowns to 'all'
-        document.getElementById('countySelect').value = 'all';
-        document.getElementById('facilityTypeSelect').value = 'all';
+        const countySelect = document.getElementById('countySelect');
+        const facilityTypeSelect = document.getElementById('facilityTypeSelect');
+        if (countySelect) countySelect.value = 'all';
+        if (facilityTypeSelect) facilityTypeSelect.value = 'all';
         
         // Clear any active routing
         if (routingControl) {
@@ -3108,7 +3376,7 @@ function setupEventListeners() {
     });
     
     // Map view buttons
-    document.getElementById('mapViewBtn').addEventListener('click', function() {
+    safeAddListener('mapViewBtn', 'click', function() {
         if (currentLayer !== 'streets') {
             map.removeLayer(mapLayers[currentLayer]);
             mapLayers.streets.addTo(map);
@@ -3120,39 +3388,78 @@ function setupEventListeners() {
         // Remove GPS mode and road network
         document.body.classList.remove('gps-mode', 'gps-navigation-mode');
         clearRoadNetwork();
+        
+        // Hide the moving car
+        const movingCar = document.getElementById('movingCar');
+        if (movingCar) {
+            movingCar.style.display = 'none';
+        }
     });
     
     // GPS Navigation Mode
-    document.getElementById('gpsViewBtn').addEventListener('click', function() {
+    safeAddListener('gpsViewBtn', 'click', function() {
+        console.log('GPS button clicked');
+        
         // Activate GPS navigation mode
         if (currentLayer !== 'navigation') {
-            map.removeLayer(mapLayers[currentLayer]);
-            mapLayers.navigation.addTo(map);
-            mapLayers.roads.addTo(map); // Add road overlay for better visibility
-            currentLayer = 'navigation';
+            try {
+                map.removeLayer(mapLayers[currentLayer]);
+                mapLayers.navigation.addTo(map);
+                mapLayers.roads.addTo(map); // Add road overlay for better visibility
+                currentLayer = 'navigation';
+            } catch(e) {
+                console.error('Error switching to navigation layer:', e);
+            }
         }
         
         // Add GPS mode classes
         document.body.classList.add('gps-mode', 'gps-navigation-mode');
         
+        // Show the moving car animation
+        const movingCar = document.getElementById('movingCar');
+        if (movingCar) {
+            movingCar.style.display = 'flex';
+        }
+        
         // Update button states
         document.querySelectorAll('.header-btn').forEach(btn => btn.classList.remove('active'));
         this.classList.add('active');
         
-        // Enhance map for GPS navigation
-        map.setZoom(15); // Higher zoom for better road visibility
+        // Only zoom if we have user location, otherwise stay at current view
+        if (userLocation) {
+            try {
+                map.setView([userLocation.lat, userLocation.lng], 15);
+            } catch(e) {
+                console.error('Error setting map view:', e);
+            }
+        } else {
+            // Try to get user location first
+            getUserLocation().then(location => {
+                if (location && map) {
+                    map.setView([location.lat, location.lng], 15);
+                }
+            }).catch(err => {
+                console.log('Location not available for GPS mode:', err);
+                showNotification('Click "My Location" button to enable GPS tracking');
+            });
+        }
         
         // Start GPS simulation
-        startGPSNavigation();
+        try {
+            startGPSNavigation();
+        } catch(e) {
+            console.error('Error starting GPS navigation:', e);
+        }
 
         speakNavigation('GPS Navigation Mode activated', true);
     });
 
-    document.getElementById('satelliteViewBtn').addEventListener('click', function() {
-        if (currentLayer !== 'satellite') {
+    // Street view button
+    safeAddListener('streetBtn', 'click', function() {
+        if (currentLayer !== 'streets') {
             map.removeLayer(mapLayers[currentLayer]);
-            mapLayers.satellite.addTo(map);
-            currentLayer = 'satellite';
+            mapLayers.streets.addTo(map);
+            currentLayer = 'streets';
             
             document.querySelectorAll('.header-btn').forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
@@ -3160,9 +3467,16 @@ function setupEventListeners() {
         // Remove GPS mode and road network
         document.body.classList.remove('gps-mode', 'gps-navigation-mode');
         clearRoadNetwork();
+        
+        // Hide the moving car
+        const movingCar = document.getElementById('movingCar');
+        if (movingCar) {
+            movingCar.style.display = 'none';
+        }
     });
 
-    document.getElementById('terrainViewBtn').addEventListener('click', function() {
+    // Terrain view button
+    safeAddListener('terrainBtn', 'click', function() {
         if (currentLayer !== 'terrain') {
             map.removeLayer(mapLayers[currentLayer]);
             mapLayers.terrain.addTo(map);
@@ -3174,13 +3488,19 @@ function setupEventListeners() {
         // Remove GPS mode and road network
         document.body.classList.remove('gps-mode', 'gps-navigation-mode');
         clearRoadNetwork();
+        
+        // Hide the moving car
+        const movingCar = document.getElementById('movingCar');
+        if (movingCar) {
+            movingCar.style.display = 'none';
+        }
     });
-    
-    document.getElementById('hybridViewBtn').addEventListener('click', function() {
-        if (currentLayer !== 'hybrid') {
+
+    safeAddListener('satelliteBtn', 'click', function() {
+        if (currentLayer !== 'satellite') {
             map.removeLayer(mapLayers[currentLayer]);
-            mapLayers.hybrid.addTo(map);
-            currentLayer = 'hybrid';
+            mapLayers.satellite.addTo(map);
+            currentLayer = 'satellite';
             
             document.querySelectorAll('.header-btn').forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
@@ -3188,18 +3508,50 @@ function setupEventListeners() {
         // Remove GPS mode and road network
         document.body.classList.remove('gps-mode', 'gps-navigation-mode');
         clearRoadNetwork();
+        
+        // Hide the moving car
+        const movingCar = document.getElementById('movingCar');
+        if (movingCar) {
+            movingCar.style.display = 'none';
+        }
     });
     
     // Map controls
-    document.getElementById('zoomInBtn').addEventListener('click', function() {
-        map.zoomIn();
+    safeAddListener('refreshBtn', 'click', function() {
+        forceRefreshFacilities();
     });
     
-    document.getElementById('zoomOutBtn').addEventListener('click', function() {
-        map.zoomOut();
+    // Heatmap functionality
+    safeAddListener('heatmapBtn', 'click', function() {
+        toggleHeatmap();
     });
     
-    document.getElementById('locateBtn').addEventListener('click', function() {
+    // Voice navigation toggle
+    safeAddListener('voiceToggleBtn', 'click', function() {
+        navigationEnabled = !navigationEnabled;
+        const btn = this;
+        const icon = btn.querySelector('i');
+        
+        if (navigationEnabled) {
+            btn.style.background = '#4CAF50';
+            icon.className = 'fas fa-volume-up';
+            showNotification('Voice navigation enabled');
+            if (speechEngine) {
+                speakDirection('Voice navigation activated');
+            }
+        } else {
+            btn.style.background = '#F44336';
+            icon.className = 'fas fa-volume-mute';
+            showNotification('Voice navigation disabled');
+            if (currentSpeech) {
+                speechEngine.cancel();
+                currentSpeech = null;
+            }
+        }
+    });
+    
+    // Locate button
+    safeAddListener('locateBtn', 'click', function() {
         if (userLocation) {
             map.setView([userLocation.lat, userLocation.lng], 15);
         } else {
@@ -3213,44 +3565,73 @@ function setupEventListeners() {
         }
     });
     
-    document.getElementById('fullscreenBtn').addEventListener('click', function() {
+    // Fullscreen button
+    safeAddListener('fullscreenBtn', 'click', function() {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen();
             this.innerHTML = '<i class="fas fa-compress"></i>';
         } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-                this.innerHTML = '<i class="fas fa-expand"></i>';
-            }
+            document.exitFullscreen();
+            this.innerHTML = '<i class="fas fa-expand"></i>';
         }
     });
     
-    // Directions panel controls
-    document.getElementById('hideDirectionsBtn').addEventListener('click', function() {
-        document.getElementById('directionsPanel').classList.remove('show');
+    // Zoom buttons
+    safeAddListener('zoomInBtn', 'click', function() {
+        console.log('Zoom In clicked');
+        if (map) {
+            map.zoomIn();
+        } else {
+            console.error('Map not initialized');
+        }
     });
     
-    document.getElementById('closeDirectionsBtn').addEventListener('click', function() {
-        document.getElementById('directionsPanel').classList.remove('show');
+    safeAddListener('zoomOutBtn', 'click', function() {
+        console.log('Zoom Out clicked');
+        if (map) {
+            map.zoomOut();
+        } else {
+            console.error('Map not initialized');
+        }
+    });
+    
+    // Refresh button
+    safeAddListener('refreshBtn', 'click', function() {
+        console.log('Refresh button clicked!');
+        forceRefreshFacilities();
+    });
+    
+    // Directions panel controls
+    safeAddListener('hideDirectionsBtn', 'click', function() {
+        const directionsPanel = document.getElementById('directionsPanel');
+        if (directionsPanel) directionsPanel.classList.remove('show');
+    });
+    
+    safeAddListener('closeDirectionsBtn', 'click', function() {
+        const directionsPanel = document.getElementById('directionsPanel');
+        if (directionsPanel) directionsPanel.classList.remove('show');
         if (routingControl) {
             map.removeControl(routingControl);
             routingControl = null;
         }
         // Remove route lines and markers
-        map.eachLayer(layer => {
-            if (layer instanceof L.Polyline || 
-                (layer instanceof L.Marker && layer.options.icon && 
-                 (layer.options.icon.options.className === 'start-marker' || 
-                  layer.options.icon.options.className === 'end-marker' ||
-                  layer.options.icon.options.className === 'car-marker'))) {
-                map.removeLayer(layer);
-            }
-        });
+        if (map) {
+            map.eachLayer(layer => {
+                if (layer instanceof L.Polyline || 
+                    (layer instanceof L.Marker && layer.options.icon && 
+                     (layer.options.icon.options.className === 'start-marker' || 
+                      layer.options.icon.options.className === 'end-marker' ||
+                      layer.options.icon.options.className === 'car-marker'))) {
+                    map.removeLayer(layer);
+                }
+            });
+        }
     });
     
-    document.getElementById('useMyLocationBtn').addEventListener('click', function() {
-        if (userLocation) {
-            document.getElementById('startLocationInput').value = 'My Location';
+    safeAddListener('useMyLocationBtn', 'click', function() {
+        const startLocationInput = document.getElementById('startLocationInput');
+        if (userLocation && startLocationInput) {
+            startLocationInput.value = 'My Location';
         } else {
             showNotification('Please click "My Location" button first');
         }
@@ -3312,14 +3693,50 @@ document.head.appendChild(style);
 
 // Initialize map and load facilities normally like a standard map
 window.addEventListener('load', function() {
-    console.log('Page loaded, initializing map...');
+    console.log('=== PAGE LOADED ===');
     
-    // Initialize map
-    initMap();
+    // Debug: Check if buttons exist immediately
+    console.log('zoomInBtn exists:', !!document.getElementById('zoomInBtn'));
+    console.log('zoomOutBtn exists:', !!document.getElementById('zoomOutBtn'));
+    console.log('mapViewBtn exists:', !!document.getElementById('mapViewBtn'));
+    console.log('satelliteBtn exists:', !!document.getElementById('satelliteBtn'));
+    console.log('terrainBtn exists:', !!document.getElementById('terrainBtn'));
+    
+    // Safety net: force-hide loading after 5 seconds no matter what
+    setTimeout(function() {
+        var loadingEl = document.getElementById('loading');
+        if (loadingEl) loadingEl.style.display = 'none';
+    }, 5000);
+    
+    // Initialize map first
+    try {
+        initMap();
+        console.log('Map initialized OK');
+    } catch(e) {
+        console.error('initMap failed:', e);
+    }
     
     // Setup event listeners
-    setupEventListeners();
+    try {
+        setupEventListeners();
+        console.log('Event listeners setup complete');
+    } catch(e) {
+        console.error('setupEventListeners failed:', e);
+    }
     
     // Load facilities normally
-    loadFacilities();
+    try {
+        loadFacilities();
+        console.log('loadFacilities called OK');
+    } catch(e) {
+        console.error('loadFacilities failed:', e);
+        var loadingEl = document.getElementById('loading');
+        if (loadingEl) loadingEl.style.display = 'none';
+    }
+});
+
+// Global error handler - hide loading on any uncaught error
+window.addEventListener('error', function() {
+    var loadingEl = document.getElementById('loading');
+    if (loadingEl) loadingEl.style.display = 'none';
 });
