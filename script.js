@@ -1251,6 +1251,10 @@ function animateGPSRoute(routeCoordinates, routeSteps) {
         return (wordCount / 2.5) * 1000; // milliseconds
     }
     
+    // Store pending announcement to wait for voice before moving car
+    let pendingAnnouncement = null;
+    let pendingSegmentTime = 100;
+    
     function navigateStep() {
         if (currentIndex >= routeCoordinates.length) {
             // Arrived at destination
@@ -1293,6 +1297,10 @@ function animateGPSRoute(routeCoordinates, routeSteps) {
         const direction = turnByTurnDirections[currentStepIndex];
         const nextDirection = turnByTurnDirections[currentStepIndex + 1];
         
+        // Check if we have an announcement to make at this step
+        let announcement = null;
+        let isImportantTurn = false;
+        
         // Check for precise distance-based triggers (100m, 50m before turns)
         if (nextDirection && (direction.type === 'turn' || direction.type === 'left' || direction.type === 'right')) {
             const remainingDistance = nextDirection.distanceMeters;
@@ -1300,27 +1308,24 @@ function animateGPSRoute(routeCoordinates, routeSteps) {
             // Speak at exactly 100 meters before turn
             if (remainingDistance > 0 && remainingDistance <= 100 && lastSpokenDistance !== 100) {
                 lastSpokenDistance = 100;
-                const warningText = `In 100 meters, ${direction.instruction}`;
-                speak(warningText, position[0], position[1]);
-                console.log('100m warning:', warningText);
+                announcement = `In 100 meters, ${direction.instruction}`;
+                isImportantTurn = true;
+                console.log('100m warning:', announcement);
             }
             // Speak at exactly 50 meters before turn
             else if (remainingDistance > 0 && remainingDistance <= 50 && lastSpokenDistance !== 50) {
                 lastSpokenDistance = 50;
-                const warningText = `In 50 meters, ${direction.instruction}`;
-                speak(warningText, position[0], position[1]);
-                console.log('50m warning:', warningText);
+                announcement = `In 50 meters, ${direction.instruction}`;
+                isImportantTurn = true;
+                console.log('50m warning:', announcement);
             }
         }
         
         // Regular step-based voice directions
-        if (currentStepIndex !== lastSpokenStep && currentStepIndex < turnByTurnDirections.length) {
+        if (!announcement && currentStepIndex !== lastSpokenStep && currentStepIndex < turnByTurnDirections.length) {
             lastSpokenStep = currentStepIndex;
-            isSpeaking = true;
             
             // Build GPS announcement
-            let announcement = '';
-            
             if (currentStepIndex === 0) {
                 announcement = `Starting navigation. ${direction.instruction}`;
                 if (direction.distanceMeters > 100) {
@@ -1328,8 +1333,9 @@ function animateGPSRoute(routeCoordinates, routeSteps) {
                 }
             } else if (direction.type === 'roundabout') {
                 announcement = `Approaching roundabout. ${direction.instruction}`;
+                isImportantTurn = true;
             } else if (direction.type === 'turn' || direction.type === 'left' || direction.type === 'right') {
-                // Calculate remaining distance to next turn
+                isImportantTurn = true;
                 const remainingDistance = nextDirection ? nextDirection.distanceMeters : 0;
                 
                 if (remainingDistance > 0 && remainingDistance <= 100) {
@@ -1356,42 +1362,35 @@ function animateGPSRoute(routeCoordinates, routeSteps) {
                 }
             } else if (currentStepIndex === turnByTurnDirections.length - 1 || direction.type === 'arrive') {
                 announcement = 'You have arrived at your destination.';
-                hasAnnouncedArrival = true; // Mark arrival as announced
-            }
-            
-            if (announcement) {
-                console.log('Announcing:', announcement);
-                // Pass current position for landmark-based navigation
-                speak(announcement, position[0], position[1]);
-                
-                // Calculate timing to sync car with voice
-                const speechTime = estimateSpeechTime(announcement);
-                const nextStepDistance = segmentDistances[currentIndex] || 50;
-                const timeToNextStep = (nextStepDistance / carSpeedMPS) * 1000;
-                
-                // For turns and arrivals, pause car until voice finishes so they stay in sync
-                if (direction.type === 'turn' || direction.type === 'left' || direction.type === 'right' || 
-                    direction.type === 'roundabout' || direction.type === 'arrive' || 
-                    currentStepIndex === turnByTurnDirections.length - 1) {
-                    const pauseTime = Math.max(0, speechTime - timeToNextStep + 500); // +500ms buffer
-                    if (pauseTime > 0) {
-                        console.log(`Pausing car for ${pauseTime}ms at turn to sync with voice`);
-                        setTimeout(() => { isSpeaking = false; }, speechTime + pauseTime);
-                    } else {
-                        setTimeout(() => { isSpeaking = false; }, speechTime);
-                    }
-                } else {
-                    setTimeout(() => { isSpeaking = false; }, speechTime);
-                }
+                hasAnnouncedArrival = true;
+                isImportantTurn = true;
             }
         }
         
-        // Calculate time for this segment based on actual distance
-        const segmentDistance = segmentDistances[currentIndex] || 50; // meters
-        const segmentTime = Math.max(50, (segmentDistance / carSpeedMPS) * 1000); // milliseconds, min 50ms
+        // Calculate segment time
+        const segmentDistance = segmentDistances[currentIndex] || 50;
+        const baseSegmentTime = Math.max(80, (segmentDistance / carSpeedMPS) * 1000);
         
         currentIndex++;
-        setTimeout(navigateStep, segmentTime);
+        
+        // If we have an announcement, speak it and wait for it to finish before moving car
+        if (announcement) {
+            console.log('Announcing:', announcement);
+            speak(announcement, position[0], position[1]);
+            
+            const speechTime = estimateSpeechTime(announcement);
+            
+            // For important turns, wait longer for voice to finish
+            const waitTime = isImportantTurn ? 
+                Math.max(speechTime + 500, baseSegmentTime) : // Wait for voice + buffer
+                Math.max(speechTime, baseSegmentTime); // Normal wait
+            
+            console.log(`Car waiting ${waitTime}ms for voice to finish: "${announcement}"`);
+            setTimeout(navigateStep, waitTime);
+        } else {
+            // No announcement, move at normal speed
+            setTimeout(navigateStep, baseSegmentTime);
+        }
     }
     
     navigateStep();
