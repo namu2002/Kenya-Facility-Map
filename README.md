@@ -1,4 +1,4 @@
-# Kenya Facilities Map Dashboard
+# Smart Facility Finder System
 
 An interactive web-based dashboard for visualizing and analyzing facilities data across Kenya. This project provides a comprehensive mapping solution with advanced features for facility management and analysis.
 
