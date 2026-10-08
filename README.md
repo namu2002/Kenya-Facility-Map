@@ -164,7 +164,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact
 
-[Your Name] - [your.email@example.com]
+[JOY NJAPIT] - [joynjapit8@gmail.com]
 Project Link: [https://github.com/yourusername/kenya-facilities-map](https://github.com/yourusername/kenya-facilities-map)
 
 ---
