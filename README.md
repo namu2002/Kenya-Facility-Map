@@ -165,7 +165,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Contact
 
 JOY NJAPIT - joynjapit8@gmail.com
-Project Link: https://github.com/namu2002/kenya-facilities-map(https://github.com/namu2002/kenya-facility-map)
+Project Link: https:https://github.com/namu2002/Kenya-Facility-Map
 
 ---
 
