@@ -164,9 +164,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact
 
-[JOY NJAPIT] - [joynjapit8@gmail.com]
-Project Link: [https://github.com/yourusername/kenya-facilities-map](https://github.com/yourusername/kenya-facilities-map)
+JOY NJAPIT - joynjapit8@gmail.com
+Project Link: https://github.com/namu2002/kenya-facilities-map(https://github.com/namu2002/kenya-facility-map)
 
 ---
 
-**Note**: This project uses external CDN links for libraries. For production deployment, consider hosting these libraries locally for better performance and reliability.
+**Note:** This project uses external CDNs for some libraries, so an internet connection is required to load those resources. Map tiles and routing services may also depend on the availability of their respective providers.
