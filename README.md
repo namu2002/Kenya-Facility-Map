@@ -2,6 +2,9 @@
 
 An interactive web-based dashboard for visualizing and analyzing facilities data across Kenya. This project provides a comprehensive mapping solution with advanced features for facility management and analysis.
 
+**Live Demo:** https://kenya-facility-map.onrender.com
+
+**Source Code:** https://github.com/namu2002/Kenya-Facility-Map
 ## Features
 
 ### 🗺️ Interactive Mapping
